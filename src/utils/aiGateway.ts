@@ -18,6 +18,7 @@ export async function processVoiceCommand(text: string, settings: any) {
        {
          "type": "trip",
          "data": {
+           "date": "YYYY-MM-DD" (se mencionado, caso contrário omitir),
            "earnings": number,
            "kmDriven": number,
            "carAutonomy": number (padrão 10 se não informado),
@@ -31,6 +32,7 @@ export async function processVoiceCommand(text: string, settings: any) {
        {
          "type": "refuel",
          "data": {
+           "date": "YYYY-MM-DD" (se mencionado, caso contrário omitir),
            "totalValue": number,
            "pricePerLiter": number (usar o padrão se não informado),
            "refuelType": "work" | "personal"
@@ -41,6 +43,7 @@ export async function processVoiceCommand(text: string, settings: any) {
        {
          "type": "transaction",
          "data": {
+           "date": "YYYY-MM-DD" (se mencionado, caso contrário omitir),
            "transactionType": "income" | "expense",
            "amount": number,
            "description": "string",

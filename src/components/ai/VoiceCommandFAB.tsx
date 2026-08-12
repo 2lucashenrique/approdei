@@ -34,6 +34,8 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
     if (!result || !result.type || !result.data || !settings) return;
 
     const today = new Date().toISOString().split('T')[0];
+    const itemDate = result.data.date || today;
+    
     
     if (result.type === 'trip') {
       const { earnings, kmDriven, carAutonomy, startTime, endTime, platform } = result.data;
@@ -46,7 +48,7 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
       const trip: Trip = {
         id: Date.now().toString(),
         userId: settings.userId,
-        date: today,
+        date: itemDate,
         earnings,
         startTime,
         endTime,
@@ -66,7 +68,7 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
       const refuel: Refuel = {
         id: Date.now().toString(),
         userId: settings.userId,
-        date: today,
+        date: itemDate,
         totalValue,
         pricePerLiter: pricePerLiter || settings.fuelPricePerLiter,
         liters: totalValue / (pricePerLiter || settings.fuelPricePerLiter),
@@ -81,7 +83,7 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
         type: transactionType,
         amount,
         description,
-        date: today,
+        date: itemDate,
         category
       };
       onAddTransaction(transaction);
