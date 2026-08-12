@@ -78,7 +78,7 @@ const AccountPage: React.FC<AccountPageProps> = ({
   };
 
   const sortedTransactions = [...filteredTransactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime()
   );
 
   return (
@@ -190,7 +190,7 @@ const AccountPage: React.FC<AccountPageProps> = ({
                           <p className="text-sm text-gray-500">{transaction.category}</p>
                         )}
                         <p className="text-sm text-gray-600">
-                          {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                          {new Date(transaction.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                     </div>
