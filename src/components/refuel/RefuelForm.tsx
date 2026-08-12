@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Refuel, Settings } from '@/types';
+import { formatNumber } from '@/utils/calculations';
 import { useAuth } from '@/hooks/useAuth';
 
 interface RefuelFormProps {
