@@ -29,14 +29,14 @@ const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFi
 
     switch (dateFilter.type) {
       case 'specific-date':
-        return dateFilter.specificDate ? new Date(dateFilter.specificDate) : new Date();
+        return dateFilter.specificDate ? new Date(dateFilter.specificDate + 'T12:00:00') : new Date();
       
       case 'date-range':
         // Para período de datas, usar a data inicial se disponível, senão a final, senão hoje
         if (dateFilter.startDate) {
-          return new Date(dateFilter.startDate);
+          return new Date(dateFilter.startDate + 'T12:00:00');
         } else if (dateFilter.endDate) {
-          return new Date(dateFilter.endDate);
+          return new Date(dateFilter.endDate + 'T12:00:00');
         }
         return new Date();
       
@@ -68,7 +68,7 @@ const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFi
   // Preparar dados para o gráfico
   const chartData = weekDays.map(day => {
     const dayTrips = trips.filter(trip => 
-      isSameDay(new Date(trip.date), day)
+      isSameDay(new Date(trip.date + 'T12:00:00'), day)
     );
     
     const totalEarnings = dayTrips.reduce((sum, trip) => sum + trip.earnings, 0);
