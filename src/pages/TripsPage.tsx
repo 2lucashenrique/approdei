@@ -59,16 +59,33 @@ const TripsPage: React.FC<TripsPageProps> = ({
 
   // Filtrar corridas baseadas na semana selecionada no gráfico
   const chartFilteredTrips = useMemo(() => {
-    if (!chartInterval) return filteredTrips;
+    // Se o filtro global for "all", usamos o intervalo do gráfico
+    // Se for um filtro específico (mês, range, data única), respeitamos esse filtro primeiro
+    // e o gráfico apenas navega dentro ou ao redor dele.
     
-    return filteredTrips.filter(trip => {
-      const tripDate = new Date(trip.date + 'T12:00:00');
-      return isWithinInterval(tripDate, { 
-        start: chartInterval.start, 
-        end: chartInterval.end 
+    // Problema reportado: "quando seleciono um mes especifico ou um periodo no filtro, nao esta carregando os dados no resumo"
+    // Isso acontece porque o gráfico (WeeklyEarningsChart) redefine o chartInterval para uma SEMANA.
+    // Se o usuário filtrou um MÊS, o chartFilteredTrips fica restrito à SEMANA que o gráfico está mostrando.
+    
+    // Solução: Se houver um filtro de data ativo que não seja "all", o resumo deve mostrar os dados do filtro,
+    // a menos que o usuário esteja navegando explicitamente no gráfico para fora desse período.
+    
+    if (dateFilter.type === 'all') {
+      if (!chartInterval) return filteredTrips;
+      
+      return filteredTrips.filter(trip => {
+        const tripDate = new Date(trip.date + 'T12:00:00');
+        return isWithinInterval(tripDate, { 
+          start: chartInterval.start, 
+          end: chartInterval.end 
+        });
       });
-    });
-  }, [filteredTrips, chartInterval]);
+    }
+
+    // Se o filtro não for "all", retornamos as corridas filtradas pelo cabeçalho
+    // O gráfico ainda mostrará a semana, mas a lista e o resumo mostrarão o período do filtro
+    return filteredTrips;
+  }, [filteredTrips, chartInterval, dateFilter.type]);
 
   const handleEditTrip = (updatedTrip: Trip) => {
     console.log('Editando corrida:', updatedTrip);
