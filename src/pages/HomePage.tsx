@@ -44,14 +44,14 @@ const HomePage: React.FC<HomePageProps> = ({
   // Dados do mês atual
   const currentMonth = new Date();
   currentMonth.setDate(1);
-  const monthTrips = trips.filter(trip => new Date(trip.date) >= currentMonth);
+  const monthTrips = trips.filter(trip => new Date(trip.date + 'T12:00:00') >= currentMonth);
   const monthEarnings = monthTrips.reduce((sum, trip) => sum + trip.earnings, 0);
 
   // Semana atual
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
   const weekEarnings = trips
-    .filter(trip => new Date(trip.date) >= weekAgo)
+    .filter(trip => new Date(trip.date + 'T12:00:00') >= weekAgo)
     .reduce((sum, trip) => sum + trip.earnings, 0);
 
   // Meta semanal
