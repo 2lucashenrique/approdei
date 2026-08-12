@@ -26,6 +26,7 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
     isProcessing, 
     result, 
     error, 
+    aiQuestion,
     startListening, 
     reset 
   } = useVoiceCommand(settings);
