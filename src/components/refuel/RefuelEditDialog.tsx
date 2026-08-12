@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Refuel } from '@/types';
+import { formatNumber } from '@/utils/calculations';
 
 interface RefuelEditDialogProps {
   refuel: Refuel;
@@ -22,9 +23,9 @@ const RefuelEditDialog: React.FC<RefuelEditDialogProps> = ({ refuel, onSave, onC
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const totalValue = parseFloat(formData.totalValue);
-    const pricePerLiter = parseFloat(formData.pricePerLiter);
-    const liters = totalValue / pricePerLiter;
+    const totalValue = parseFloat(formData.totalValue.replace(',', '.'));
+    const pricePerLiter = parseFloat(formData.pricePerLiter.replace(',', '.'));
+    const liters = Number((totalValue / pricePerLiter).toFixed(4));
 
     const updatedRefuel: Refuel = {
       ...refuel,
@@ -42,7 +43,7 @@ const RefuelEditDialog: React.FC<RefuelEditDialogProps> = ({ refuel, onSave, onC
   };
 
   const calculatedLiters = formData.totalValue && formData.pricePerLiter
-    ? (parseFloat(formData.totalValue) / parseFloat(formData.pricePerLiter)).toFixed(2)
+    ? formatNumber(parseFloat(formData.totalValue.replace(',', '.')) / parseFloat(formData.pricePerLiter.replace(',', '.')), 2)
     : '0,00';
 
   return (

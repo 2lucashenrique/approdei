@@ -34,5 +34,8 @@ export const formatCurrency = (value: number): string => {
 };
 
 export const formatNumber = (value: number, decimals: number = 2): string => {
-  return value.toFixed(decimals).replace('.', ',');
+  return Number(value.toFixed(decimals)).toLocaleString('pt-BR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
 };

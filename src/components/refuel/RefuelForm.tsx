@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Refuel, Settings } from '@/types';
+import { formatNumber } from '@/utils/calculations';
 import { useAuth } from '@/hooks/useAuth';
 
 interface RefuelFormProps {
@@ -28,9 +29,9 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
     
     if (!user) return;
     
-    const totalValue = parseFloat(formData.totalValue);
-    const pricePerLiter = parseFloat(formData.pricePerLiter);
-    const liters = totalValue / pricePerLiter;
+    const totalValue = parseFloat(formData.totalValue.replace(',', '.'));
+    const pricePerLiter = parseFloat(formData.pricePerLiter.replace(',', '.'));
+    const liters = Number((totalValue / pricePerLiter).toFixed(4));
 
     // Update settings if price per liter changed
     if (pricePerLiter !== settings.fuelPricePerLiter) {
@@ -73,7 +74,7 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
   };
 
   const calculatedLiters = formData.totalValue && formData.pricePerLiter
-    ? (parseFloat(formData.totalValue) / parseFloat(formData.pricePerLiter)).toFixed(2)
+    ? formatNumber(parseFloat(formData.totalValue.replace(',', '.')) / parseFloat(formData.pricePerLiter.replace(',', '.')), 2)
     : '0,00';
 
   return (
