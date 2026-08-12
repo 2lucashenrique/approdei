@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -9,6 +9,8 @@ import { formatCurrency } from '@/utils/calculations';
 import { filterByDate } from '@/utils/dateFilters';
 import { Plus, Minus, Edit, Trash2, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import ExpensesChart from '@/components/account/ExpensesChart';
+import WeeklyTransactionsChart from '@/components/account/WeeklyTransactionsChart';
+import { isWithinInterval } from 'date-fns';
 
 interface AccountPageProps {
   trips: Trip[];
