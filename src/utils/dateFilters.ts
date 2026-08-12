@@ -10,12 +10,12 @@ export const filterByDate = <T extends { date: string }>(
   }
 
   return items.filter(item => {
-    const itemDate = new Date(item.date);
+    const itemDate = new Date(item.date + 'T12:00:00');
     
     switch (dateFilter.type) {
       case 'specific-date':
         if (!dateFilter.specificDate) return true;
-        const specificDate = new Date(dateFilter.specificDate);
+        const specificDate = new Date(dateFilter.specificDate + 'T12:00:00');
         return (
           itemDate.getDate() === specificDate.getDate() &&
           itemDate.getMonth() === specificDate.getMonth() &&
@@ -24,8 +24,8 @@ export const filterByDate = <T extends { date: string }>(
       
       case 'date-range':
         if (!dateFilter.startDate && !dateFilter.endDate) return true;
-        const start = dateFilter.startDate ? new Date(dateFilter.startDate) : null;
-        const end = dateFilter.endDate ? new Date(dateFilter.endDate) : null;
+        const start = dateFilter.startDate ? new Date(dateFilter.startDate + 'T00:00:00') : null;
+        const end = dateFilter.endDate ? new Date(dateFilter.endDate + 'T23:59:59') : null;
         
         if (start && end) {
           return itemDate >= start && itemDate <= end;
