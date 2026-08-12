@@ -118,68 +118,80 @@ const AccountPage: React.FC<AccountPageProps> = ({
         </div>
       </div>
 
+      {/* Gráfico Semanal */}
+      <WeeklyTransactionsChart 
+        transactions={transactions} 
+        dateFilter={dateFilter} 
+        onWeekChange={(start, end) => setChartInterval({ start, end })}
+      />
+
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">
-              Saldo Total
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-blue-100">
-              <DollarSign className="h-4 w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-blue-800' : 'text-red-600'}`}>
-              {formatCurrency(totalBalance)}
-            </div>
-            <p className="text-xs text-blue-600 mt-1">
-              Saldo para o período selecionado
-            </p>
-          </CardContent>
-        </Card>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">
+          {dateFilter.type === 'all' && !chartInterval ? 'Resumo Geral' : 'Resumo do Período'}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Saldo Total
+              </CardTitle>
+              <div className="p-2 rounded-lg bg-blue-100">
+                <DollarSign className="h-4 w-4 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-blue-800' : 'text-red-600'}`}>
+                {formatCurrency(totalBalance)}
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                Saldo para o período selecionado
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-green-50 border-green-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">
-              Ganhos
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-green-100">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-800">
-              {formatCurrency(totalIncome)}
-            </div>
-            <p className="text-xs text-green-600 mt-1">
-              Total de receitas
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="bg-green-50 border-green-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700">
+                Ganhos
+              </CardTitle>
+              <div className="p-2 rounded-lg bg-green-100">
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-800">
+                {formatCurrency(totalIncome)}
+              </div>
+              <p className="text-xs text-green-600 mt-1">
+                Total de receitas
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-red-50 border-red-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-700">
-              Despesas
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-red-100">
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-800">
-              {formatCurrency(totalExpenses)}
-            </div>
-            <p className="text-xs text-red-600 mt-1">
-              Total de gastos
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="bg-red-50 border-red-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-red-700">
+                Despesas
+              </CardTitle>
+              <div className="p-2 rounded-lg bg-red-100">
+                <TrendingDown className="h-4 w-4 text-red-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-800">
+                {formatCurrency(totalExpenses)}
+              </div>
+              <p className="text-xs text-red-600 mt-1">
+                Total de gastos
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Gráfico de Despesas */}
-      <ExpensesChart transactions={filteredTransactions} />
+      <ExpensesChart transactions={chartFilteredTransactions} />
 
       {/* Lista de Transações */}
       <div>
