@@ -13,9 +13,10 @@ import { DateFilterOptions } from '@/components/filters/DateFilter';
 interface WeeklyEarningsChartProps {
   trips: Trip[];
   dateFilter?: DateFilterOptions;
+  onWeekChange?: (start: Date, end: Date) => void;
 }
 
-const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFilter }) => {
+const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFilter, onWeekChange }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const now = new Date();
     return startOfWeek(now, { weekStartsOn: 1 }); // Segunda-feira
@@ -60,6 +61,13 @@ const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFi
   }, [dateFilter]);
 
   const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 }); // Domingo
+
+  // Notificar o pai sobre a mudança de semana
+  useEffect(() => {
+    if (onWeekChange) {
+      onWeekChange(currentWeekStart, weekEnd);
+    }
+  }, [currentWeekStart, weekEnd, onWeekChange]);
   const weekDays = eachDayOfInterval({ start: currentWeekStart, end: weekEnd });
 
   // Mapear dias da semana em português
