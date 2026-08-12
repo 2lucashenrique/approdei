@@ -16,7 +16,7 @@ const WeeklySummary: React.FC<WeeklySummaryProps> = ({ trips, settings }) => {
   const weekStart = new Date(currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay()));
   
   const weekTrips = trips.filter(trip => {
-    const tripDate = new Date(trip.date);
+    const tripDate = new Date(trip.date + 'T12:00:00');
     return tripDate >= weekStart;
   });
 
