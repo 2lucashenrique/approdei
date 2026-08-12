@@ -1,58 +1,35 @@
 
 export const AI_GATEWAY_URL = 'https://api.lovable.dev/v1/ai/chat/completions';
 
-export async function processVoiceCommand(text: string, settings: any) {
+export async function processVoiceCommand(messages: { role: 'user' | 'assistant', content: string }[], settings: any) {
   const systemPrompt = `
-    Você é um assistente de voz para um aplicativo de gerenciamento de motoristas de aplicativo (Uber, 99, etc).
-    Sua tarefa é extrair informações de um comando de voz e transformá-las em um objeto JSON estruturado.
+    Você é um assistente de voz interativo para um aplicativo de gerenciamento de motoristas de aplicativo (Uber, 99, etc).
+    Sua tarefa é coletar informações para registrar Corridas (TRIP), Abastecimentos (REFUEL) ou Transações (TRANSACTION).
+
+    DIRETRIZES:
+    1. Se o usuário quiser registrar algo, mas faltarem campos obrigatórios, responda com status "partial" e uma pergunta curta e natural em "question".
+    2. Se você já tiver todas as informações necessárias, responda com status "complete" e os dados estruturados em "data".
+    3. Seja amigável e direto.
     
-    Os dados do usuário são:
-    - Plataformas: ${settings.platforms?.join(', ') || 'Uber, 99'}
-    - Categorias de Receita: ${settings.incomeCategories?.join(', ') || 'Particular, Serviço'}
-    - Categorias de Despesa: ${settings.expenseCategories?.join(', ') || 'Combustível, Manutenção'}
-    - Preço do combustível atual: R$ ${settings.fuelPricePerLiter}
+    CAMPOS OBRIGATÓRIOS POR TIPO:
+    - TRIP: earnings (ganhos), kmDriven (km rodados), platform (plataforma).
+    - REFUEL: totalValue (valor total), pricePerLiter (preço por litro - padrão: ${settings.fuelPricePerLiter}).
+    - TRANSACTION: transactionType (income/expense), amount (valor), description (descrição).
 
-    Você deve retornar UM dos seguintes tipos de objetos JSON:
+    JSON FORMAT:
+    {
+      "status": "partial" | "complete",
+      "type": "trip" | "refuel" | "transaction",
+      "question": "string (se partial)",
+      "data": { ... (se complete) }
+    }
 
-    1. TRIP (Corrida/Dia de trabalho):
-       {
-         "type": "trip",
-         "data": {
-           "date": "YYYY-MM-DD" (se mencionado, caso contrário omitir),
-           "earnings": number,
-           "kmDriven": number,
-           "carAutonomy": number (padrão 10 se não informado),
-           "startTime": "HH:mm",
-           "endTime": "HH:mm",
-           "platform": "string" (deve ser uma das plataformas do usuário)
-         }
-       }
+    TRIP data: { "earnings": number, "kmDriven": number, "platform": string, "startTime": "HH:mm", "endTime": "HH:mm", "date": "YYYY-MM-DD" }
+    REFUEL data: { "totalValue": number, "pricePerLiter": number, "refuelType": "work" | "personal", "date": "YYYY-MM-DD" }
+    TRANSACTION data: { "transactionType": "income" | "expense", "amount": number, "description": "string", "category": "string", "date": "YYYY-MM-DD" }
 
-    2. REFUEL (Abastecimento):
-       {
-         "type": "refuel",
-         "data": {
-           "date": "YYYY-MM-DD" (se mencionado, caso contrário omitir),
-           "totalValue": number,
-           "pricePerLiter": number (usar o padrão se não informado),
-           "refuelType": "work" | "personal"
-         }
-       }
-
-    3. TRANSACTION (Outras receitas ou despesas):
-       {
-         "type": "transaction",
-         "data": {
-           "date": "YYYY-MM-DD" (se mencionado, caso contrário omitir),
-           "transactionType": "income" | "expense",
-           "amount": number,
-           "description": "string",
-           "category": "string" (usar uma das categorias do usuário se possível)
-         }
-       }
-
-    Se você não entender ou as informações forem insuficientes, retorne:
-    { "error": "Desculpe, não consegui entender as informações necessárias. Pode repetir?" }
+    Plataformas disponíveis: ${settings.platforms?.join(', ') || 'Uber, 99'}
+    Categorias: ${settings.incomeCategories?.join(', ') || 'Particular'}, ${settings.expenseCategories?.join(', ') || 'Combustível'}
 
     Responda APENAS com o JSON.
   `;
@@ -62,14 +39,12 @@ export async function processVoiceCommand(text: string, settings: any) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // O Lovable API Key é injetado automaticamente se usarmos o proxy ou se o usuário tiver configurado
-        // Mas aqui usaremos a convenção do gateway
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: text }
+          ...messages
         ],
         response_format: { type: 'json_object' }
       }),
@@ -80,7 +55,8 @@ export async function processVoiceCommand(text: string, settings: any) {
     }
 
     const result = await response.json();
-    return JSON.parse(result.choices[0].message.content);
+    const content = JSON.parse(result.choices[0].message.content);
+    return content;
   } catch (error) {
     console.error('Erro na IA:', error);
     return { error: 'ocorreu um erro ao processar sua voz, tente novamente mais tarde' };

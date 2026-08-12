@@ -26,6 +26,7 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
     isProcessing, 
     result, 
     error, 
+    aiQuestion,
     startListening, 
     reset 
   } = useVoiceCommand(settings);
@@ -157,28 +158,59 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
                   ) : isProcessing ? (
                     <div className="flex flex-col items-center gap-2">
                       <Loader2 className="animate-spin text-primary" size={32} />
-                      <p className="text-gray-600">Processando com IA...</p>
+                      <p className="text-gray-600">Processando...</p>
+                    </div>
+                  ) : aiQuestion ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 w-full">
+                        <p className="text-primary font-medium text-center text-lg">
+                          {aiQuestion}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 items-end h-6">
+                        {[1, 2, 3].map((i) => (
+                          <motion.div
+                            key={i}
+                            animate={{ opacity: [0.3, 1, 0.3] }}
+                            transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+                            className="w-2 h-2 bg-primary rounded-full"
+                          />
+                        ))}
+                      </div>
                     </div>
                   ) : error ? (
-                    <div className="flex flex-col items-center gap-2 text-red-500">
+                    <div className="flex flex-col items-center gap-2 text-red-500 text-center">
                       <AlertCircle size={32} />
-                      <p className="text-center font-medium">{error}</p>
+                      <p className="font-medium px-4">{error}</p>
                       <Button variant="outline" size="sm" onClick={startListening} className="mt-2">
                         Tentar Novamente
                       </Button>
                     </div>
                   ) : result ? (
                     <div className="w-full space-y-3">
-                      <div className="bg-green-50 p-3 rounded-lg border border-green-100">
-                        <p className="text-sm font-semibold text-green-800 mb-1">Entendido:</p>
-                        <pre className="text-xs text-green-700 whitespace-pre-wrap">
-                          {JSON.stringify(result.data, null, 2)}
-                        </pre>
+                      <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                        <p className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                          <Check size={16} /> Resumo do Registro:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-green-700">
+                          {Object.entries(result.data).map(([key, value]) => (
+                            value && (
+                              <div key={key} className="flex flex-col">
+                                <span className="opacity-70 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                <span className="font-bold">{String(value)}</span>
+                              </div>
+                            )
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 text-center">Confirma o registro acima?</p>
+                      <p className="text-xs text-gray-500 text-center">Deseja confirmar esses dados?</p>
                     </div>
                   ) : (
-                    <p className="text-gray-400 text-center">Diga algo como:<br/>"Fiz 200 reais na Uber hoje, rodei 100km"</p>
+                    <p className="text-gray-400 text-center">
+                      Diga algo como:<br/>
+                      <span className="text-gray-500 italic">"Registrar uma corrida"</span> ou<br/>
+                      <span className="text-gray-500 italic">"Fiz 200 reais na Uber hoje"</span>
+                    </p>
                   )}
                 </div>
 
