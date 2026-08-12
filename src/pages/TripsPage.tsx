@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import TripList from '@/components/trips/TripList';
 import DateFilter, { DateFilterOptions } from '@/components/filters/DateFilter';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Trip, Settings, Transaction } from '@/types';
 import { filterByDate } from '@/utils/dateFilters';
 import { Plus } from 'lucide-react';
+import { isWithinInterval } from 'date-fns';
 
 interface TripsPageProps {
   trips: Trip[];
@@ -27,6 +28,7 @@ const TripsPage: React.FC<TripsPageProps> = ({
 }) => {
   const [dateFilter, setDateFilter] = useState<DateFilterOptions>({ type: 'all' });
   const [shouldScrollToLatest, setShouldScrollToLatest] = useState(false);
+  const [chartInterval, setChartInterval] = useState<{ start: Date; end: Date } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,8 +54,21 @@ const TripsPage: React.FC<TripsPageProps> = ({
     }
   }, [shouldScrollToLatest]);
 
-  // Filtrar corridas por data
+  // Filtrar corridas por data (filtro do cabeçalho)
   const filteredTrips = filterByDate(trips, dateFilter);
+
+  // Filtrar corridas baseadas na semana selecionada no gráfico
+  const chartFilteredTrips = useMemo(() => {
+    if (!chartInterval) return filteredTrips;
+    
+    return filteredTrips.filter(trip => {
+      const tripDate = new Date(trip.date + 'T12:00:00');
+      return isWithinInterval(tripDate, { 
+        start: chartInterval.start, 
+        end: chartInterval.end 
+      });
+    });
+  }, [filteredTrips, chartInterval]);
 
   const handleEditTrip = (updatedTrip: Trip) => {
     console.log('Editando corrida:', updatedTrip);
@@ -87,12 +102,18 @@ const TripsPage: React.FC<TripsPageProps> = ({
       </div>
 
       {/* Gráfico Semanal */}
-      <WeeklyEarningsChart trips={trips} dateFilter={dateFilter} />
+      <WeeklyEarningsChart 
+        trips={trips} 
+        dateFilter={dateFilter} 
+        onWeekChange={(start, end) => setChartInterval({ start, end })}
+      />
 
       {/* Dashboard de Métricas */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Resumo Geral</h3>
-        <TripMetricsDashboard trips={filteredTrips} />
+        <h3 className="text-lg font-semibold mb-4">
+          {dateFilter.type === 'all' && !chartInterval ? 'Resumo Geral' : 'Resumo do Período'}
+        </h3>
+        <TripMetricsDashboard trips={chartFilteredTrips} />
       </div>
       
       <div>
