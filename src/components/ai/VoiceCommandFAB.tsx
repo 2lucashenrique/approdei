@@ -31,7 +31,7 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
   } = useVoiceCommand(settings);
 
   const handleConfirm = () => {
-    if (!result || !result.type || !result.data) return;
+    if (!result || !result.type || !result.data || !settings) return;
 
     const today = new Date().toISOString().split('T')[0];
     
@@ -90,6 +90,8 @@ const VoiceCommandFAB: React.FC<VoiceCommandFABProps> = ({
     setIsOpen(false);
     reset();
   };
+
+  if (!settings) return null;
 
   return (
     <>
