@@ -118,10 +118,10 @@ const TripsPage: React.FC<TripsPageProps> = ({
       
       <div>
         <h2 className="text-lg font-semibold mb-4">
-          Histórico de Corridas ({filteredTrips.length})
+          Histórico de Corridas ({chartFilteredTrips.length})
         </h2>
         <TripList 
-          trips={filteredTrips} 
+          trips={chartFilteredTrips} 
           actions={{
             onEdit: handleEditTrip,
             onDelete: handleDeleteTrip
