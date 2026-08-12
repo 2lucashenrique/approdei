@@ -22,6 +22,13 @@ const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFi
     return startOfWeek(now, { weekStartsOn: 1 }); // Segunda-feira
   });
 
+  // Normaliza valores de data (Date ou string) para um Date válido ao meio-dia local
+  const toValidDate = (value?: Date | string): Date | null => {
+    if (!value) return null;
+    const parsed = value instanceof Date ? value : new Date(`${value}T12:00:00`);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  };
+
   // Função para determinar a data de referência baseada no filtro
   const getFilterReferenceDate = (): Date => {
     if (!dateFilter || dateFilter.type === 'all') {
@@ -30,24 +37,19 @@ const WeeklyEarningsChart: React.FC<WeeklyEarningsChartProps> = ({ trips, dateFi
 
     switch (dateFilter.type) {
       case 'specific-date':
-        return dateFilter.specificDate ? new Date(dateFilter.specificDate + 'T12:00:00') : new Date();
-      
+        return toValidDate(dateFilter.specificDate) ?? new Date();
+
       case 'date-range':
         // Para período de datas, usar a data inicial se disponível, senão a final, senão hoje
-        if (dateFilter.startDate) {
-          return new Date(dateFilter.startDate + 'T12:00:00');
-        } else if (dateFilter.endDate) {
-          return new Date(dateFilter.endDate + 'T12:00:00');
-        }
-        return new Date();
-      
+        return toValidDate(dateFilter.startDate) ?? toValidDate(dateFilter.endDate) ?? new Date();
+
       case 'month':
         // Para mês específico, usar o primeiro dia do mês selecionado
         if (dateFilter.month && dateFilter.year) {
           return new Date(dateFilter.year, parseInt(dateFilter.month) - 1, 1);
         }
         return new Date();
-      
+
       default:
         return new Date();
     }
