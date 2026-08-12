@@ -1,14 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import RefuelList from '@/components/refuel/RefuelList';
 import RefuelDashboard from '@/components/refuel/RefuelDashboard';
+import WeeklyRefuelChart from '@/components/refuel/WeeklyRefuelChart';
 import DateFilter, { DateFilterOptions } from '@/components/filters/DateFilter';
 import { Refuel, Settings, Transaction } from '@/types';
 import { filterByDate } from '@/utils/dateFilters';
 import { Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { isWithinInterval } from 'date-fns';
 
 interface RefuelPageProps {
   refuels: Refuel[];
@@ -30,8 +32,26 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [dateFilter, setDateFilter] = useState<DateFilterOptions>({ type: 'all' });
+  const [chartInterval, setChartInterval] = useState<{ start: Date; end: Date } | null>(null);
 
   const filteredRefuels = filterByDate(refuels, dateFilter);
+
+  // Filtrar abastecimentos baseados na semana selecionada no gráfico
+  const chartFilteredRefuels = useMemo(() => {
+    if (dateFilter.type === 'all') {
+      if (!chartInterval) return filteredRefuels;
+      
+      return filteredRefuels.filter(refuel => {
+        const refuelDate = new Date(refuel.date + 'T12:00:00');
+        return isWithinInterval(refuelDate, { 
+          start: chartInterval.start, 
+          end: chartInterval.end 
+        });
+      });
+    }
+
+    return filteredRefuels;
+  }, [filteredRefuels, chartInterval, dateFilter.type]);
 
   const handleAddRefuel = (refuel: Refuel) => {
     console.log('Adicionando abastecimento:', refuel);
@@ -89,15 +109,27 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
         </div>
       </div>
 
+      {/* Gráfico Semanal */}
+      <WeeklyRefuelChart 
+        refuels={refuels} 
+        dateFilter={dateFilter} 
+        onWeekChange={(start, end) => setChartInterval({ start, end })}
+      />
+
       {/* Dashboard com dados filtrados */}
-      <RefuelDashboard refuels={filteredRefuels} />
+      <div>
+        <h3 className="text-lg font-semibold mb-4">
+          {dateFilter.type === 'all' && !chartInterval ? 'Resumo Geral' : 'Resumo do Período'}
+        </h3>
+        <RefuelDashboard refuels={chartFilteredRefuels} />
+      </div>
       
       <div>
         <h2 className="text-lg font-semibold mb-4">
-          Histórico de Abastecimentos ({filteredRefuels.length})
+          Histórico de Abastecimentos ({chartFilteredRefuels.length})
         </h2>
         <RefuelList 
-          refuels={filteredRefuels} 
+          refuels={chartFilteredRefuels} 
           actions={{
             onEdit: handleEditRefuel,
             onDelete: handleDeleteRefuel
