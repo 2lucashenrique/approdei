@@ -44,7 +44,7 @@ const RefuelList: React.FC<RefuelListProps> = ({ refuels, actions }) => {
     <>
       <div className="space-y-3">
         {refuels
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .sort((a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime())
           .map((refuel) => (
             <Card key={refuel.id} className="shadow-sm">
               <CardContent className="p-4">
@@ -52,7 +52,7 @@ const RefuelList: React.FC<RefuelListProps> = ({ refuels, actions }) => {
                   <div>
                     <p className="font-semibold text-lg">{formatCurrency(refuel.totalValue)}</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(refuel.date).toLocaleDateString('pt-BR')}
+                      {new Date(refuel.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </p>
                     <div className="flex items-center gap-1 mt-1">
                       {refuel.type === 'work' ? (

@@ -78,14 +78,14 @@ const TripList: React.FC<TripListProps> = ({ trips, actions, scrollToLatest = fa
     );
   }
 
-  const sortedTrips = trips.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedTrips = trips.sort((a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime());
 
   const renderTripSummary = (trip: Trip) => {
     return (
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4 flex-1">
           <h3 className="text-lg font-semibold text-gray-900">
-            {new Date(trip.date).toLocaleDateString('pt-BR', {
+            {new Date(trip.date + 'T12:00:00').toLocaleDateString('pt-BR', {
               weekday: 'long',
               day: 'numeric',
               month: 'long'
@@ -117,7 +117,7 @@ const TripList: React.FC<TripListProps> = ({ trips, actions, scrollToLatest = fa
         <div className="flex justify-between items-start mb-6">
           <div>
             <h3 className="text-xl font-bold text-gray-900">
-              {new Date(trip.date).toLocaleDateString('pt-BR', {
+              {new Date(trip.date + 'T12:00:00').toLocaleDateString('pt-BR', {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long'
