@@ -32,21 +32,39 @@ const AccountPage: React.FC<AccountPageProps> = ({
   const navigate = useNavigate();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilterOptions>({ type: 'all' });
+  const [chartInterval, setChartInterval] = useState<{ start: Date; end: Date } | null>(null);
 
   console.log('Transações na conta:', transactions);
 
-  // Filtrar transações por data
+  // Filtrar transações por data (filtro global)
   const filteredTransactions = filterByDate(transactions, dateFilter);
 
-  // Separar transações automáticas das manuais (usando transações filtradas)
-  const automaticTransactions = filteredTransactions.filter(t => 
+  // Filtrar transações baseadas na semana selecionada no gráfico
+  const chartFilteredTransactions = useMemo(() => {
+    if (dateFilter.type === 'all') {
+      if (!chartInterval) return filteredTransactions;
+      
+      return filteredTransactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date + 'T12:00:00');
+        return isWithinInterval(transactionDate, { 
+          start: chartInterval.start, 
+          end: chartInterval.end 
+        });
+      });
+    }
+
+    return filteredTransactions;
+  }, [filteredTransactions, chartInterval, dateFilter.type]);
+
+  // Separar transações automáticas das manuais (usando transações filtradas pelo período/gráfico)
+  const automaticTransactions = chartFilteredTransactions.filter(t => 
     t.id.startsWith('trip-') || t.id.startsWith('refuel-')
   );
-  const manualTransactions = filteredTransactions.filter(t => 
+  const manualTransactions = chartFilteredTransactions.filter(t => 
     !t.id.startsWith('trip-') && !t.id.startsWith('refuel-')
   );
 
-  // Calcular totais (usando transações filtradas)
+  // Calcular totais
   const totalAutomaticIncome = automaticTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -79,7 +97,7 @@ const AccountPage: React.FC<AccountPageProps> = ({
     navigate('/add-transaction');
   };
 
-  const sortedTransactions = [...filteredTransactions].sort(
+  const sortedTransactions = [...chartFilteredTransactions].sort(
     (a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime()
   );
 
