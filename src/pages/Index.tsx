@@ -9,6 +9,7 @@ import RefuelPage from '@/pages/RefuelPage';
 import AccountPage from '@/pages/AccountPage';
 import SettingsPage from '@/pages/SettingsPage';
 import NewTripPage from '@/pages/NewTripPage';
+import VoiceCommandFAB from '@/components/ai/VoiceCommandFAB';
 import { useMigration } from '@/hooks/useMigration';
 import { useUserTrips, useUserRefuels, useUserTransactions, useUserSettings } from '@/hooks/useUserData';
 import { useBackButton } from '@/hooks/useBackButton';
@@ -170,6 +171,12 @@ const Index = () => {
       </main>
       <Footer />
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <VoiceCommandFAB 
+        settings={settings}
+        onAddTrip={addTrip}
+        onAddRefuel={addRefuel}
+        onAddTransaction={addTransaction}
+      />
     </div>
   );
 };
