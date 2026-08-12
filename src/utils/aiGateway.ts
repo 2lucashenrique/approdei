@@ -83,6 +83,6 @@ export async function processVoiceCommand(text: string, settings: any) {
     return JSON.parse(result.choices[0].message.content);
   } catch (error) {
     console.error('Erro na IA:', error);
-    return { error: 'Ocorreu um erro ao processar sua voz. Tente novamente.' };
+    return { error: 'ocorreu um erro ao processar sua voz, tente novamente mais tarde' };
   }
 }
