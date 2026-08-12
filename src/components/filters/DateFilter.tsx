@@ -152,8 +152,9 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange, initialFilters 
                   <SelectContent>
                     <SelectItem value="all">Todos os registros</SelectItem>
                     <SelectItem value="specific-date">Data específica</SelectItem>
-                    <SelectItem value="date-range">Período de datas</SelectItem>
                     <SelectItem value="month">Mês específico</SelectItem>
+                    <SelectItem value="date-range">Período de datas</SelectItem>
+
                   </SelectContent>
                 </Select>
               </div>

@@ -18,10 +18,11 @@ export const filterByDate = <T extends { date: string }>(
         const specificDate = dateFilter.specificDate instanceof Date 
           ? dateFilter.specificDate 
           : new Date(dateFilter.specificDate + 'T12:00:00');
+        
         return (
-          itemDate.getDate() === specificDate.getDate() &&
+          itemDate.getFullYear() === specificDate.getFullYear() &&
           itemDate.getMonth() === specificDate.getMonth() &&
-          itemDate.getFullYear() === specificDate.getFullYear()
+          itemDate.getDate() === specificDate.getDate()
         );
       
       case 'date-range':
@@ -34,7 +35,10 @@ export const filterByDate = <T extends { date: string }>(
           : null;
         
         if (start && end) {
-          return itemDate >= start && itemDate <= end;
+          // Ajustar fim do dia para garantir inclusão
+          const endOfDay = new Date(end);
+          endOfDay.setHours(23, 59, 59, 999);
+          return itemDate >= start && itemDate <= endOfDay;
         } else if (start) {
           return itemDate >= start;
         } else if (end) {
