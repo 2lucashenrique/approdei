@@ -34,6 +34,14 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
     type: 'work' as 'work' | 'personal',
   });
 
+  // Update pricePerLiter when settings change
+  React.useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      pricePerLiter: settings.fuelPricePerLiter.toString()
+    }));
+  }, [settings.fuelPricePerLiter]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
