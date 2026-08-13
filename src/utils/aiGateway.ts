@@ -34,6 +34,7 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
       }
     }
 
+    IMPORTANTE: Se o usuário disser "corrida", "abastecimento" ou "despesa" sem dados, mude o status para "partial" e comece a perguntar os campos.
     Responda APENAS o JSON. Seja conciso nas perguntas.
   `;
 
@@ -44,7 +45,7 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages

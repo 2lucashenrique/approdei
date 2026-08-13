@@ -113,7 +113,8 @@ export function useVoiceCommand(settings: Settings) {
   }, []);
 
   useEffect(() => {
-    if (!isListening && transcript && !isProcessing && !result) {
+    // Only process if we have a transcript AND we are not already processing or have a result
+    if (!isListening && transcript.trim() !== '' && !isProcessing && !result) {
       handleProcess(transcript);
     }
   }, [isListening, transcript, isProcessing, result]);
