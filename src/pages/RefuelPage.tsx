@@ -14,11 +14,11 @@ import { isWithinInterval } from 'date-fns';
 
 interface RefuelPageProps {
   refuels: Refuel[];
-  onAddRefuel: (refuel: Refuel) => void;
+  onAddRefuel: (refuel: Omit<Refuel, 'id' | 'userId'>) => void;
   onDeleteRefuel: (refuelId: string) => void;
   settings: Settings;
   onSettingsUpdate: (settings: Settings) => void;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => void;
 }
 
 const RefuelPage: React.FC<RefuelPageProps> = ({ 
@@ -53,29 +53,28 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
     return filteredRefuels;
   }, [filteredRefuels, chartInterval, dateFilter.type]);
 
-  const handleAddRefuel = (refuel: Refuel) => {
-    console.log('Adicionando abastecimento:', refuel);
+  const handleAddRefuel = (refuelData: Omit<Refuel, 'id' | 'userId'>) => {
+    console.log('Adicionando abastecimento:', refuelData);
     
     // Adicionar o abastecimento
-    onAddRefuel(refuel);
+    onAddRefuel(refuelData as Refuel);
     
     // Determinar a categoria baseada no tipo
-    const category = refuel.type === 'work' ? 'Abastecimento Trabalho' : 'Abastecimento Pessoal';
-    const typeLabel = refuel.type === 'work' ? 'Trabalho' : 'Pessoal';
+    const category = refuelData.type === 'work' ? 'Abastecimento Trabalho' : 'Abastecimento Pessoal';
+    const typeLabel = refuelData.type === 'work' ? 'Trabalho' : 'Pessoal';
     
     // Registrar como despesa automaticamente com a categoria correta
-    const transaction: Transaction = {
-      id: `refuel-${refuel.id}`,
-      userId: user?.id || '',
+    // Omitimos o id para que o backend gere um novo, evitando conflitos
+    const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: 'expense',
-      amount: refuel.totalValue,
-      description: `Abastecimento ${typeLabel} - ${refuel.liters.toFixed(2)}L`,
-      date: refuel.date,
+      amount: refuelData.totalValue,
+      description: `Abastecimento ${typeLabel} - ${refuelData.liters.toFixed(2)}L`,
+      date: refuelData.date,
       category: category,
     };
     
     console.log('Registrando transação de abastecimento:', transaction);
-    onAddTransaction(transaction);
+    onAddTransaction(transaction as Transaction);
   };
 
   const handleEditRefuel = (updatedRefuel: Refuel) => {

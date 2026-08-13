@@ -14,7 +14,7 @@ import Header from '@/components/Header';
 
 interface AddRefuelPageProps {
   settings: Settings;
-  onAddRefuel: (refuel: any) => void;
+  onAddRefuel: (refuel: Omit<Refuel, 'id' | 'userId'>) => void;
   onSettingsUpdate: (settings: Settings) => void;
 }
 
