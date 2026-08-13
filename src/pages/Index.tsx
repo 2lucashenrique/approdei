@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import BottomNavigation from '@/components/BottomNavigation';
 import Header from '@/components/Header';
@@ -73,10 +73,7 @@ const Index = () => {
   }
 
   const addTrip = (trip: any) => {
-    // If it has an ID, it's probably from a form that generated a temporary one
-    // But our hook expects Omit<Trip, 'userId'> which might include 'id' if we're updating,
-    // or not if we're creating. The current TripForm might be sending an ID.
-    const { userId: _, ...tripData } = trip;
+    const { userId: _, id: __, ...tripData } = trip;
     addTripToData(tripData);
   };
 
@@ -86,12 +83,12 @@ const Index = () => {
   };
 
   const addRefuel = (refuel: any) => {
-    const { userId: _, ...refuelData } = refuel;
+    const { userId: _, id: __, ...refuelData } = refuel;
     addRefuelToData(refuelData);
   };
 
   const addTransaction = (transaction: any) => {
-    const { userId: _, ...transactionData } = transaction;
+    const { userId: _, id: __, ...transactionData } = transaction;
     addTransactionToData(transactionData);
   };
 
@@ -185,7 +182,18 @@ export const NewTripPageWrapper = () => {
   const { transactions, addTransaction: addTransactionToData } = useUserTransactions();
   const { settings } = useUserSettings();
 
-  if (!migrationComplete) {
+  // We use useMemo to avoid re-creating the functions on every render
+  const addTrip = useMemo(() => (trip: any) => {
+    const { userId: _, id: __, ...tripData } = trip;
+    addTripToData(tripData);
+  }, [addTripToData]);
+
+  const addTransaction = useMemo(() => (transaction: any) => {
+    const { userId: _, id: __, ...transactionData } = transaction;
+    addTransactionToData(transactionData);
+  }, [addTransactionToData]);
+
+  if (!migrationComplete || !settings) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -195,16 +203,6 @@ export const NewTripPageWrapper = () => {
       </div>
     );
   }
-
-  const addTrip = (trip: Trip) => {
-    const { userId, ...tripWithoutUserId } = trip;
-    addTripToData(tripWithoutUserId);
-  };
-
-  const addTransaction = (transaction: Transaction) => {
-    const { userId, ...transactionWithoutUserId } = transaction;
-    addTransactionToData(transactionWithoutUserId);
-  };
 
   return (
     <NewTripPage 
