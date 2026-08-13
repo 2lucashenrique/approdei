@@ -15,6 +15,7 @@ import { isWithinInterval } from 'date-fns';
 interface RefuelPageProps {
   refuels: Refuel[];
   onAddRefuel: (refuel: Omit<Refuel, 'id' | 'userId'>) => void;
+  onUpdateRefuel: (refuel: Refuel) => void;
   onDeleteRefuel: (refuelId: string) => void;
   settings: Settings;
   onSettingsUpdate: (settings: Settings) => void;
@@ -24,7 +25,9 @@ interface RefuelPageProps {
 const RefuelPage: React.FC<RefuelPageProps> = ({ 
   refuels, 
   onAddRefuel, 
+  onUpdateRefuel,
   onDeleteRefuel,
+
   settings, 
   onSettingsUpdate,
   onAddTransaction 
@@ -78,7 +81,7 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
 
   const handleEditRefuel = (updatedRefuel: Refuel) => {
     console.log('Editando abastecimento:', updatedRefuel);
-    onAddRefuel(updatedRefuel); // Usar a mesma função pois ela substitui por ID
+    onUpdateRefuel(updatedRefuel);
   };
 
   const handleDeleteRefuel = (refuelId: string) => {

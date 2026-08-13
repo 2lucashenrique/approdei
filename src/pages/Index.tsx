@@ -83,6 +83,10 @@ const Index = () => {
   const addRefuel = (refuel: Omit<Refuel, 'id' | 'userId'>) => {
     addRefuelToData(refuel);
   };
+  
+  const updateRefuel = (refuel: Refuel) => {
+    updateRefuelToData(refuel);
+  };
 
   const addTransaction = (transaction: Omit<Transaction, 'id' | 'userId'>) => {
     addTransactionToData(transaction);
@@ -120,6 +124,7 @@ const Index = () => {
         return <TripsPage 
           trips={trips} 
           onAddTrip={addTrip} 
+          onEditTrip={editTrip}
           onDeleteTrip={deleteTrip}
           settings={settings} 
           onAddTransaction={addTransaction}
@@ -128,6 +133,7 @@ const Index = () => {
         return <RefuelPage 
           refuels={refuels} 
           onAddRefuel={addRefuel} 
+          onUpdateRefuel={updateRefuel}
           onDeleteRefuel={deleteRefuel}
           settings={settings} 
           onSettingsUpdate={updateSettingsData}

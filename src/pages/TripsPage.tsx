@@ -14,6 +14,7 @@ import { isWithinInterval } from 'date-fns';
 interface TripsPageProps {
   trips: Trip[];
   onAddTrip: (trip: Omit<Trip, 'id' | 'userId'>) => void;
+  onEditTrip: (trip: Trip) => void;
   onDeleteTrip: (tripId: string) => void;
   settings: Settings;
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => void;
@@ -22,7 +23,9 @@ interface TripsPageProps {
 const TripsPage: React.FC<TripsPageProps> = ({ 
   trips, 
   onAddTrip, 
+  onEditTrip,
   onDeleteTrip, 
+
   settings, 
   onAddTransaction 
 }) => {
@@ -89,7 +92,7 @@ const TripsPage: React.FC<TripsPageProps> = ({
 
   const handleEditTrip = (updatedTrip: Trip) => {
     console.log('Editando corrida:', updatedTrip);
-    onAddTrip(updatedTrip as any);
+    onEditTrip(updatedTrip);
   };
 
   const handleDeleteTrip = (tripId: string) => {
