@@ -125,7 +125,7 @@ Data Atual: ${new Date().toISOString()}
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": \`Bearer \${openAiApiKey}\`,
+        "Authorization": `Bearer ${openAiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -200,7 +200,7 @@ Data Atual: ${new Date().toISOString()}
         const totalEarnings = trips?.reduce((acc, t) => acc + Number(t.earnings), 0) || 0;
         const totalTrips = trips?.reduce((acc, t) => acc + t.trip_count, 0) || 0;
         
-        toolResult = \`Período: \${period}. Ganhos: R$ \${totalEarnings.toFixed(2)}. Corridas: \${totalTrips}.\`;
+        toolResult = `Período: ${period}. Ganhos: R$ ${totalEarnings.toFixed(2)}. Corridas: ${totalTrips}.`;
       } 
       else if (functionName === "create_refuel") {
         const { data, error } = await supabaseClient.from('refuels').insert({
@@ -232,10 +232,10 @@ Data Atual: ${new Date().toISOString()}
       // Second call to OpenAI to generate final response
       const finalResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Authorization": \`Bearer \${openAiApiKey}\`,
-          "Content-Type": "application/json",
-        },
+      headers: {
+        "Authorization": `Bearer ${openAiApiKey}`,
+        "Content-Type": "application/json",
+      },
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [
