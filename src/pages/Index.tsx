@@ -82,14 +82,12 @@ const Index = () => {
     updateTrip(tripData);
   };
 
-  const addRefuel = (refuel: any) => {
-    const { userId: _, id: __, ...refuelData } = refuel;
-    addRefuelToData(refuelData);
+  const addRefuel = (refuel: Omit<Refuel, 'id' | 'userId'>) => {
+    addRefuelToData(refuel);
   };
 
-  const addTransaction = (transaction: any) => {
-    const { userId: _, id: __, ...transactionData } = transaction;
-    addTransactionToData(transactionData);
+  const addTransaction = (transaction: Omit<Transaction, 'id' | 'userId'>) => {
+    addTransactionToData(transaction);
   };
 
   const editTransaction = (updatedTransaction: Transaction) => {

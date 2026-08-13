@@ -16,7 +16,7 @@ interface AccountPageProps {
   trips: Trip[];
   transactions: Transaction[];
   settings: Settings;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => void;
   onEditTransaction?: (transaction: Transaction) => void;
   onDeleteTransaction?: (transactionId: string) => void;
 }

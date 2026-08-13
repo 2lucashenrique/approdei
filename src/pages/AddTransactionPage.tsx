@@ -15,7 +15,7 @@ import Header from '@/components/Header';
 
 interface AddTransactionPageProps {
   settings: Settings;
-  onAddTransaction: (transaction: any) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => void;
 }
 
 const AddTransactionPage: React.FC<AddTransactionPageProps> = ({ 
