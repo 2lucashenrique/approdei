@@ -57,14 +57,13 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
     console.log('Adicionando abastecimento:', refuelData);
     
     // Adicionar o abastecimento
-    onAddRefuel(refuelData as Refuel);
+    onAddRefuel(refuelData);
     
     // Determinar a categoria baseada no tipo
     const category = refuelData.type === 'work' ? 'Abastecimento Trabalho' : 'Abastecimento Pessoal';
     const typeLabel = refuelData.type === 'work' ? 'Trabalho' : 'Pessoal';
     
     // Registrar como despesa automaticamente com a categoria correta
-    // Omitimos o id para que o backend gere um novo, evitando conflitos
     const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: 'expense',
       amount: refuelData.totalValue,
@@ -74,7 +73,7 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
     };
     
     console.log('Registrando transação de abastecimento:', transaction);
-    onAddTransaction(transaction as Transaction);
+    onAddTransaction(transaction);
   };
 
   const handleEditRefuel = (updatedRefuel: Refuel) => {

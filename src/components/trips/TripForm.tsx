@@ -45,9 +45,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
 
     const totalTrips = Object.values(tripsByPlatform).reduce((sum, count) => sum + count, 0);
 
-    const trip: Trip = {
-      id: Date.now().toString(),
-      userId: user.id,
+    const trip: Omit<Trip, 'id' | 'userId'> = {
       date: formData.date,
       earnings: totalEarnings,
       startTime: formData.startTime,
@@ -64,7 +62,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
       observations: formData.observations,
     };
 
-    onSubmit(trip);
+    onSubmit(trip as Trip);
     setFormData({
       date: new Date().toISOString().split('T')[0],
       startTime: '',

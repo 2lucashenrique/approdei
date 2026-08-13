@@ -58,9 +58,7 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
       });
     }
 
-    const refuel: Refuel = {
-      id: Date.now().toString(),
-      userId: user.id,
+    const refuel: Omit<Refuel, 'id' | 'userId'> = {
       date: formData.date,
       totalValue,
       liters,
@@ -68,7 +66,7 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
       type: formData.type,
     };
 
-    onSubmit(refuel);
+    onSubmit(refuel as Refuel);
     setFormData({
       date: new Date().toISOString().split('T')[0],
       totalValue: '',
