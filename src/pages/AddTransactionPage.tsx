@@ -15,7 +15,7 @@ import Header from '@/components/Header';
 
 interface AddTransactionPageProps {
   settings: Settings;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: any) => void;
 }
 
 const AddTransactionPage: React.FC<AddTransactionPageProps> = ({ 

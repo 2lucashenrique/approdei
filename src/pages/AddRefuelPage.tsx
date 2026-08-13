@@ -14,7 +14,7 @@ import Header from '@/components/Header';
 
 interface AddRefuelPageProps {
   settings: Settings;
-  onAddRefuel: (refuel: Refuel) => void;
+  onAddRefuel: (refuel: any) => void;
   onSettingsUpdate: (settings: Settings) => void;
 }
 

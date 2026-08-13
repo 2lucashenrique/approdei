@@ -10,9 +10,9 @@ import { useBackButton } from '@/hooks/useBackButton';
 import Header from '@/components/Header';
 
 interface NewTripPageProps {
-  onAddTrip: (trip: Trip) => void;
+  onAddTrip: (trip: any) => void;
   settings: Settings;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: any) => void;
 }
 
 const NewTripPage: React.FC<NewTripPageProps> = ({ 
