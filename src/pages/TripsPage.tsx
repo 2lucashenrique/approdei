@@ -89,9 +89,10 @@ const TripsPage: React.FC<TripsPageProps> = ({
 
   const handleEditTrip = (updatedTrip: Trip) => {
     console.log('Editando corrida:', updatedTrip);
-    // Para edição, o ID é necessário
-    // updatedTrip aqui já é um objeto Trip completo
-    onAddTrip(updatedTrip as any); 
+    // Para edição, precisamos chamar updateTrip diretamente se quisermos ser precisos,
+    // mas onAddTrip está sendo usado como um handler genérico.
+    // Vamos garantir que ele receba o objeto correto.
+    onAddTrip(updatedTrip as any);
   };
 
   const handleDeleteTrip = (tripId: string) => {
