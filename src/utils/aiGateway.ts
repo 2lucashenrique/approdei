@@ -54,10 +54,16 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
       }),
     });
 
-    if (!response.ok) throw new Error('Falha na API');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('AI Gateway Error Response:', errorData);
+      throw new Error(`Falha na API: ${response.status}`);
+    }
 
     const result = await response.json();
-    return JSON.parse(result.choices[0].message.content);
+    const contentString = result.choices[0].message.content;
+    console.log('AI Response Content:', contentString);
+    return JSON.parse(contentString);
   } catch (error) {
     console.error('Erro na IA:', error);
     return { error: 'Ocorreu um erro ao processar sua voz. Tente novamente.' };

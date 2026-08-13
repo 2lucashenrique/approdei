@@ -119,6 +119,15 @@ export function useVoiceCommand(settings: Settings) {
     }
   }, [isListening, transcript, isProcessing, result]);
 
+  // Clean up any ongoing speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
   const handleProcess = async (text: string) => {
     setIsProcessing(true);
     const newHistory: Message[] = [...history, { role: 'user', content: text }];
