@@ -18,19 +18,42 @@ export function useVoiceCommand(settings: Settings) {
   const sayText = (text: string) => {
     if (!('speechSynthesis' in window)) return;
     
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'pt-BR';
-    utterance.rate = 1.0;
+    utterance.rate = 1.1; // Slightly faster for better conversation flow
     
     utterance.onend = () => {
       // Small delay before starting to listen again to avoid hearing itself
       setTimeout(() => {
-        if (recognitionRef.current) {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
           try {
-            recognitionRef.current.start();
+            const recognition = new SpeechRecognition();
+            recognitionRef.current = recognition;
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+              setIsListening(true);
+              setTranscript('');
+            };
+
+            recognition.onresult = (event: any) => {
+              const current = event.resultIndex;
+              const transcriptText = event.results[current][0].transcript;
+              setTranscript(transcriptText);
+            };
+
+            recognition.onend = () => {
+              setIsListening(false);
+              // Access transcript from state is tricky in callback, 
+              // but handleProcess handles it via the transcript state update
+            };
+
+            recognition.start();
           } catch (e) {
             console.error('Failed to restart recognition', e);
           }
@@ -83,13 +106,17 @@ export function useVoiceCommand(settings: Settings) {
 
     recognition.onend = () => {
       setIsListening(false);
-      if (transcript) {
-        handleProcess(transcript);
-      }
+      // Use transcript ref or latest value
     };
 
     recognition.start();
-  }, [transcript]);
+  }, []);
+
+  useEffect(() => {
+    if (!isListening && transcript && !isProcessing && !result) {
+      handleProcess(transcript);
+    }
+  }, [isListening, transcript, isProcessing, result]);
 
   const handleProcess = async (text: string) => {
     setIsProcessing(true);
