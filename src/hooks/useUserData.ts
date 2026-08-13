@@ -45,7 +45,7 @@ export const useUserTrips = () => {
   });
 
   const addTripMutation = useMutation({
-    mutationFn: async (trip: Omit<Trip, 'userId'>) => {
+    mutationFn: async (trip: Omit<Trip, 'userId' | 'id'>) => {
       if (!user) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
@@ -184,7 +184,7 @@ export const useUserRefuels = () => {
   });
 
   const addRefuelMutation = useMutation({
-    mutationFn: async (refuel: Omit<Refuel, 'userId'>) => {
+    mutationFn: async (refuel: Omit<Refuel, 'userId' | 'id'>) => {
       if (!user) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
@@ -305,7 +305,7 @@ export const useUserTransactions = () => {
   });
 
   const addTransactionMutation = useMutation({
-    mutationFn: async (transaction: Omit<Transaction, 'userId'>) => {
+    mutationFn: async (transaction: Omit<Transaction, 'userId' | 'id'>) => {
       if (!user) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
