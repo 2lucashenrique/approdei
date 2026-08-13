@@ -77,8 +77,7 @@ const Index = () => {
   };
 
   const editTrip = (updatedTrip: Trip) => {
-    const { userId: _, ...tripData } = updatedTrip;
-    updateTrip(tripData);
+    updateTrip(updatedTrip);
   };
 
   const addRefuel = (refuel: Omit<Refuel, 'id' | 'userId'>) => {
@@ -90,13 +89,11 @@ const Index = () => {
   };
 
   const editTransaction = (updatedTransaction: Transaction) => {
-    const { userId: _, ...transactionData } = updatedTransaction;
-    updateTransaction(transactionData);
+    updateTransaction(updatedTransaction);
   };
 
   const updateSettingsData = (newSettings: Settings) => {
-    const { userId: _, ...settingsData } = newSettings;
-    updateSettings(settingsData);
+    updateSettings(newSettings);
   };
 
   const getTabTitle = () => {
