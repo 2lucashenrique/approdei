@@ -136,7 +136,11 @@ export function useVoiceCommand(settings: Settings) {
   }, []);
 
   const handleProcess = async (text: string) => {
+    if (isProcessing) return;
+    
     setIsProcessing(true);
+    setError(null); // Clear previous errors
+    
     const newHistory: Message[] = [...history, { role: 'user', content: text }];
     setHistory(newHistory);
     
@@ -146,6 +150,8 @@ export function useVoiceCommand(settings: Settings) {
       if (aiResponse.error) {
         setError(aiResponse.error);
         sayText(aiResponse.error);
+        // Remove the failed user message from history to allow retry
+        setHistory(history); 
       } else if (aiResponse.status === 'partial') {
         setAiQuestion(aiResponse.question);
         setHistory(prev => [...prev, { role: 'assistant', content: aiResponse.question }]);
@@ -156,8 +162,10 @@ export function useVoiceCommand(settings: Settings) {
         sayText('Entendido. Registro pronto para confirmar.');
       }
     } catch (err) {
-      setError('Falha ao processar o comando.');
-      sayText('Desculpe, tive um problema ao processar isso.');
+      console.error('Critical voice process error:', err);
+      setError('Falha na comunicação com o servidor.');
+      sayText('Desculpe, tive um problema de conexão. Tente novamente.');
+      setHistory(history);
     } finally {
       setIsProcessing(false);
     }
