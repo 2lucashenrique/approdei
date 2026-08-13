@@ -18,17 +18,33 @@ export function useVoiceCommand(settings: Settings) {
   const sayText = (text: string) => {
     if (!('speechSynthesis' in window)) return;
     
+    // Stop any ongoing speech and recognition
     window.speechSynthesis.cancel();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+    }
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'pt-BR';
-    utterance.rate = 1.1; // Slightly faster for better conversation flow
+    utterance.rate = 1.0; 
+    utterance.pitch = 1.0;
     
+    // Get available voices and prefer a natural one if possible
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang.startsWith('pt'));
+    if (ptVoice) utterance.voice = ptVoice;
+    
+    utterance.onstart = () => {
+      setIsListening(false);
+    };
+
     utterance.onend = () => {
-      // Small delay before starting to listen again to avoid hearing itself
+      // Delay before starting to listen again to avoid hearing itself
       setTimeout(() => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
+        if (SpeechRecognition && !isProcessing && !result) {
           try {
             const recognition = new SpeechRecognition();
             recognitionRef.current = recognition;
@@ -51,8 +67,9 @@ export function useVoiceCommand(settings: Settings) {
             recognition.onerror = (event: any) => {
               console.error('Auto-restart recognition error:', event.error);
               setIsListening(false);
+              // Only set error if it's not a silence/abort
               if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                setError('Erro no reconhecimento de voz após a fala da IA.');
+                setError('Tente falar novamente.');
               }
             };
 
@@ -65,7 +82,7 @@ export function useVoiceCommand(settings: Settings) {
             console.error('Failed to restart recognition', e);
           }
         }
-      }, 500);
+      }, 300);
     };
 
     window.speechSynthesis.speak(utterance);
