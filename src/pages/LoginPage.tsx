@@ -42,17 +42,7 @@ const LoginPage: React.FC = () => {
         });
         
         if (success) {
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo de volta!",
-          });
           navigate('/');
-        } else {
-          toast({
-            title: "Erro no login",
-            description: "Email ou senha incorretos",
-            variant: "destructive",
-          });
         }
       } else {
         if (formData.password !== formData.confirmPassword) {
@@ -61,6 +51,7 @@ const LoginPage: React.FC = () => {
             description: "As senhas não coincidem",
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
 
@@ -73,15 +64,9 @@ const LoginPage: React.FC = () => {
         if (success) {
           toast({
             title: "Conta criada com sucesso!",
-            description: "Bem-vindo ao Rodei!",
+            description: "Bem-vindo ao Rodei! Por favor, verifique seu e-mail para confirmar o cadastro.",
           });
-          navigate('/');
-        } else {
-          toast({
-            title: "Erro no cadastro",
-            description: "Email já está em uso",
-            variant: "destructive",
-          });
+          setIsLogin(true);
         }
       }
     } catch (error) {
