@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
@@ -151,7 +152,7 @@ Data Atual: ${new Date().toISOString()}
 
       if (functionName === "create_ride") {
         // Logic to calculate derived fields or use defaults
-        const { data: settings } = await supabaseClient.from('user_settings').select('*').eq('user_id', user.id).single();
+        const { data: settings } = await supabaseClient.from('user_settings').select('*').eq('user_id', user.id).maybeSingle();
         const autonomy = settings?.fuel_price_per_liter ? 10 : 10; // Simple default or logic
 
         const { data, error } = await supabaseClient.from('trips').insert({
@@ -166,7 +167,7 @@ Data Atual: ${new Date().toISOString()}
           observations: args.observations,
           earnings_by_platform: args.platform ? { [args.platform]: args.earnings } : {},
           trips_by_platform: args.platform ? { [args.platform]: 1 } : {},
-        }).select().single();
+        }).select().maybeSingle();
 
         if (error) throw error;
         toolResult = "Corrida registrada com sucesso!";
@@ -200,8 +201,33 @@ Data Atual: ${new Date().toISOString()}
         const totalTrips = trips?.reduce((acc, t) => acc + t.trip_count, 0) || 0;
         
         toolResult = \`Período: \${period}. Ganhos: R$ \${totalEarnings.toFixed(2)}. Corridas: \${totalTrips}.\`;
+      } 
+      else if (functionName === "create_refuel") {
+        const { data, error } = await supabaseClient.from('refuels').insert({
+          user_id: user.id,
+          date: args.date || new Date().toISOString().split('T')[0],
+          total_value: args.total_value,
+          price_per_liter: args.price_per_liter || 0,
+          liters: args.liters || (args.price_per_liter ? args.total_value / args.price_per_liter : 0),
+          type: args.type || 'work',
+        }).select().maybeSingle();
+
+        if (error) throw error;
+        toolResult = "Abastecimento registrado com sucesso!";
       }
-      // Add other tool implementations...
+      else if (functionName === "create_expense") {
+        const { data, error } = await supabaseClient.from('transactions').insert({
+          user_id: user.id,
+          type: 'expense',
+          amount: args.amount,
+          description: args.description,
+          category: args.category || 'Outros',
+          date: args.date || new Date().toISOString().split('T')[0],
+        }).select().maybeSingle();
+
+        if (error) throw error;
+        toolResult = "Despesa registrada com sucesso!";
+      }
 
       // Second call to OpenAI to generate final response
       const finalResponse = await fetch("https://api.openai.com/v1/chat/completions", {
