@@ -42,7 +42,7 @@ const Index = () => {
 
   // Hooks de dados do usuário
   const { trips, addTrip: addTripToData, updateTrip, deleteTrip, loading: tripsLoading } = useUserTrips();
-  const { refuels, addRefuel: addRefuelToData, updateRefuel, deleteRefuel, loading: refuelsLoading } = useUserRefuels();
+  const { refuels, addRefuel: addRefuelToData, updateRefuel: updateRefuelToData, deleteRefuel, loading: refuelsLoading } = useUserRefuels();
   const { transactions, addTransaction: addTransactionToData, updateTransaction, deleteTransaction, loading: transactionsLoading } = useUserTransactions();
   const { settings, updateSettings, loading: settingsLoading } = useUserSettings();
 
