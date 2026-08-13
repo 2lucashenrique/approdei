@@ -23,8 +23,13 @@ export const useUserTrips = () => {
       if (error) throw error;
       
       return data.map(item => ({
-        ...item,
+        id: item.id,
+        userId: item.user_id,
         date: item.date,
+        earnings: Number(item.earnings),
+        startTime: item.start_time,
+        endTime: item.end_time,
+        tripCount: item.trip_count,
         tripsByPlatform: item.trips_by_platform as any,
         earningsByPlatform: item.earnings_by_platform as any,
         kmDriven: Number(item.km_driven),
@@ -33,7 +38,7 @@ export const useUserTrips = () => {
         fuelCost: Number(item.fuel_cost),
         netProfit: Number(item.net_profit),
         earningsPerHour: Number(item.earnings_per_hour),
-        earnings: Number(item.earnings),
+        observations: item.observations || undefined,
       } as Trip));
     },
     enabled: !!user,
@@ -51,7 +56,7 @@ export const useUserTrips = () => {
           earnings: trip.earnings,
           start_time: trip.startTime,
           end_time: trip.endTime,
-          trip_count: trip.trip_count,
+          trip_count: trip.tripCount,
           trips_by_platform: trip.tripsByPlatform,
           earnings_by_platform: trip.earningsByPlatform,
           km_driven: trip.kmDriven,
@@ -89,7 +94,7 @@ export const useUserTrips = () => {
           earnings: updatedTrip.earnings,
           start_time: updatedTrip.startTime,
           end_time: updatedTrip.endTime,
-          trip_count: updatedTrip.trip_count,
+          trip_count: updatedTrip.tripCount,
           trips_by_platform: updatedTrip.tripsByPlatform,
           earnings_by_platform: updatedTrip.earningsByPlatform,
           km_driven: updatedTrip.kmDriven,
@@ -166,7 +171,9 @@ export const useUserRefuels = () => {
       if (error) throw error;
       
       return data.map(item => ({
-        ...item,
+        id: item.id,
+        userId: item.user_id,
+        date: item.date,
         totalValue: Number(item.total_value),
         liters: Number(item.liters),
         pricePerLiter: Number(item.price_per_liter),
@@ -285,9 +292,13 @@ export const useUserTransactions = () => {
       if (error) throw error;
       
       return data.map(item => ({
-        ...item,
+        id: item.id,
+        userId: item.user_id,
         amount: Number(item.amount),
         type: item.type as any,
+        description: item.description,
+        date: item.date,
+        category: item.category || undefined,
       } as Transaction));
     },
     enabled: !!user,
