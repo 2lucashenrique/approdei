@@ -30,20 +30,20 @@ const NewTripPage: React.FC<NewTripPageProps> = ({
     }
   });
 
-  const handleAddTrip = (trip: Trip) => {
-    console.log('Adicionando corrida:', trip);
+  const handleAddTrip = (tripData: Omit<Trip, 'id' | 'userId'>) => {
+    console.log('Adicionando corrida:', tripData);
     
     if (!user) return;
     
     // Adicionar a corrida
-    onAddTrip(trip);
+    onAddTrip(tripData);
     
     // Registrar como receita automaticamente
     const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: 'income',
-      amount: trip.earnings,
-      description: `Corrida - ${trip.tripCount} viagens`,
-      date: trip.date,
+      amount: tripData.earnings,
+      description: `Corrida - ${tripData.tripCount} viagens`,
+      date: tripData.date,
     };
     
     console.log('Registrando transação de corrida:', transaction);

@@ -72,9 +72,8 @@ const Index = () => {
     );
   }
 
-  const addTrip = (trip: any) => {
-    const { userId: _, id: __, ...tripData } = trip;
-    addTripToData(tripData);
+  const addTrip = (trip: Omit<Trip, 'id' | 'userId'>) => {
+    addTripToData(trip);
   };
 
   const editTrip = (updatedTrip: Trip) => {
