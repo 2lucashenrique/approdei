@@ -160,7 +160,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
                 <Input
                   id="totalValue"
                   type="number"
-                  step="0.01"
+                  step="any"
                   placeholder="0,00"
                   value={formData.totalValue}
                   onChange={(e) => handleChange('totalValue', e.target.value)}
@@ -173,7 +173,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
                 <Input
                   id="pricePerLiter"
                   type="number"
-                  step="0.001"
+                  step="any"
                   placeholder="0,000"
                   value={formData.pricePerLiter}
                   onChange={(e) => handleChange('pricePerLiter', e.target.value)}

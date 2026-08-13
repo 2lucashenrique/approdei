@@ -76,7 +76,7 @@ const TripEditDialog: React.FC<TripEditDialogProps> = ({ trip, onSave, onCancel 
             <Input
               id="earnings"
               type="number"
-              step="0.01"
+              step="any"
               value={formData.earnings}
               onChange={(e) => handleChange('earnings', e.target.value)}
               required
@@ -111,6 +111,7 @@ const TripEditDialog: React.FC<TripEditDialogProps> = ({ trip, onSave, onCancel 
             <Input
               id="tripCount"
               type="number"
+              step="any"
               value={formData.tripCount}
               onChange={(e) => handleChange('tripCount', e.target.value)}
               required
@@ -122,7 +123,7 @@ const TripEditDialog: React.FC<TripEditDialogProps> = ({ trip, onSave, onCancel 
             <Input
               id="kmDriven"
               type="number"
-              step="0.1"
+              step="any"
               value={formData.kmDriven}
               onChange={(e) => handleChange('kmDriven', e.target.value)}
               required
@@ -134,7 +135,7 @@ const TripEditDialog: React.FC<TripEditDialogProps> = ({ trip, onSave, onCancel 
             <Input
               id="carAutonomy"
               type="number"
-              step="0.1"
+              step="any"
               value={formData.carAutonomy}
               onChange={(e) => handleChange('carAutonomy', e.target.value)}
               required

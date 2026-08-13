@@ -117,7 +117,7 @@ const AddTransactionPage: React.FC<AddTransactionPageProps> = ({
                 <Input
                   id="amount"
                   type="number"
-                  step="0.01"
+                  step="any"
                   placeholder="0,00"
                   value={formData.amount}
                   onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
