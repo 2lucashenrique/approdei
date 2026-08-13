@@ -15,6 +15,7 @@ import { isWithinInterval } from 'date-fns';
 interface RefuelPageProps {
   refuels: Refuel[];
   onAddRefuel: (refuel: Omit<Refuel, 'id' | 'userId'>) => void;
+  onUpdateRefuel: (refuel: Refuel) => void;
   onDeleteRefuel: (refuelId: string) => void;
   settings: Settings;
   onSettingsUpdate: (settings: Settings) => void;
@@ -24,7 +25,9 @@ interface RefuelPageProps {
 const RefuelPage: React.FC<RefuelPageProps> = ({ 
   refuels, 
   onAddRefuel, 
+  onUpdateRefuel,
   onDeleteRefuel,
+
   settings, 
   onSettingsUpdate,
   onAddTransaction 
@@ -57,14 +60,13 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
     console.log('Adicionando abastecimento:', refuelData);
     
     // Adicionar o abastecimento
-    onAddRefuel(refuelData as Refuel);
+    onAddRefuel(refuelData);
     
     // Determinar a categoria baseada no tipo
     const category = refuelData.type === 'work' ? 'Abastecimento Trabalho' : 'Abastecimento Pessoal';
     const typeLabel = refuelData.type === 'work' ? 'Trabalho' : 'Pessoal';
     
     // Registrar como despesa automaticamente com a categoria correta
-    // Omitimos o id para que o backend gere um novo, evitando conflitos
     const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: 'expense',
       amount: refuelData.totalValue,
@@ -74,12 +76,12 @@ const RefuelPage: React.FC<RefuelPageProps> = ({
     };
     
     console.log('Registrando transação de abastecimento:', transaction);
-    onAddTransaction(transaction as Transaction);
+    onAddTransaction(transaction);
   };
 
   const handleEditRefuel = (updatedRefuel: Refuel) => {
     console.log('Editando abastecimento:', updatedRefuel);
-    onAddRefuel(updatedRefuel); // Usar a mesma função pois ela substitui por ID
+    onUpdateRefuel(updatedRefuel);
   };
 
   const handleDeleteRefuel = (refuelId: string) => {

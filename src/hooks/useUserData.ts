@@ -187,18 +187,15 @@ export const useUserRefuels = () => {
     mutationFn: async (refuel: Omit<Refuel, 'userId' | 'id'>) => {
       if (!user) throw new Error('User not authenticated');
       
-      // Destruturação explícita para garantir que não enviamos id ou userId
-      const { ...cleanData } = refuel;
-      
       const { data, error } = await supabase
         .from('refuels')
         .insert({
           user_id: user.id,
-          date: cleanData.date,
-          total_value: cleanData.totalValue,
-          liters: cleanData.liters,
-          price_per_liter: cleanData.pricePerLiter,
-          type: cleanData.type,
+          date: refuel.date,
+          total_value: refuel.totalValue,
+          liters: refuel.liters,
+          price_per_liter: refuel.pricePerLiter,
+          type: refuel.type,
         })
         .select()
         .single();
@@ -311,18 +308,15 @@ export const useUserTransactions = () => {
     mutationFn: async (transaction: Omit<Transaction, 'userId' | 'id'>) => {
       if (!user) throw new Error('User not authenticated');
       
-      // Destruturação explícita para garantir que não enviamos id ou userId
-      const { ...cleanData } = transaction;
-      
       const { data, error } = await supabase
         .from('transactions')
         .insert({
           user_id: user.id,
-          type: cleanData.type,
-          amount: cleanData.amount,
-          description: cleanData.description,
-          date: cleanData.date,
-          category: cleanData.category,
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.description,
+          date: transaction.date,
+          category: transaction.category,
         })
         .select()
         .single();

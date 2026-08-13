@@ -42,7 +42,7 @@ const Index = () => {
 
   // Hooks de dados do usuário
   const { trips, addTrip: addTripToData, updateTrip, deleteTrip, loading: tripsLoading } = useUserTrips();
-  const { refuels, addRefuel: addRefuelToData, updateRefuel, deleteRefuel, loading: refuelsLoading } = useUserRefuels();
+  const { refuels, addRefuel: addRefuelToData, updateRefuel: updateRefuelToData, deleteRefuel, loading: refuelsLoading } = useUserRefuels();
   const { transactions, addTransaction: addTransactionToData, updateTransaction, deleteTransaction, loading: transactionsLoading } = useUserTransactions();
   const { settings, updateSettings, loading: settingsLoading } = useUserSettings();
 
@@ -72,18 +72,20 @@ const Index = () => {
     );
   }
 
-  const addTrip = (trip: any) => {
-    const { userId: _, id: __, ...tripData } = trip;
-    addTripToData(tripData);
+  const addTrip = (trip: Omit<Trip, 'id' | 'userId'>) => {
+    addTripToData(trip);
   };
 
   const editTrip = (updatedTrip: Trip) => {
-    const { userId: _, ...tripData } = updatedTrip;
-    updateTrip(tripData);
+    updateTrip(updatedTrip);
   };
 
   const addRefuel = (refuel: Omit<Refuel, 'id' | 'userId'>) => {
     addRefuelToData(refuel);
+  };
+  
+  const updateRefuel = (refuel: Refuel) => {
+    updateRefuelToData(refuel);
   };
 
   const addTransaction = (transaction: Omit<Transaction, 'id' | 'userId'>) => {
@@ -91,13 +93,11 @@ const Index = () => {
   };
 
   const editTransaction = (updatedTransaction: Transaction) => {
-    const { userId: _, ...transactionData } = updatedTransaction;
-    updateTransaction(transactionData);
+    updateTransaction(updatedTransaction);
   };
 
   const updateSettingsData = (newSettings: Settings) => {
-    const { userId: _, ...settingsData } = newSettings;
-    updateSettings(settingsData);
+    updateSettings(newSettings);
   };
 
   const getTabTitle = () => {
@@ -124,6 +124,7 @@ const Index = () => {
         return <TripsPage 
           trips={trips} 
           onAddTrip={addTrip} 
+          onEditTrip={editTrip}
           onDeleteTrip={deleteTrip}
           settings={settings} 
           onAddTransaction={addTransaction}
@@ -132,6 +133,7 @@ const Index = () => {
         return <RefuelPage 
           refuels={refuels} 
           onAddRefuel={addRefuel} 
+          onUpdateRefuel={updateRefuel}
           onDeleteRefuel={deleteRefuel}
           settings={settings} 
           onSettingsUpdate={updateSettingsData}
