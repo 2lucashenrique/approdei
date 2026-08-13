@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import BottomNavigation from '@/components/BottomNavigation';
 import Header from '@/components/Header';
@@ -182,7 +182,18 @@ export const NewTripPageWrapper = () => {
   const { transactions, addTransaction: addTransactionToData } = useUserTransactions();
   const { settings } = useUserSettings();
 
-  if (!migrationComplete) {
+  // We use useMemo to avoid re-creating the functions on every render
+  const addTrip = useMemo(() => (trip: any) => {
+    const { userId: _, id: __, ...tripData } = trip;
+    addTripToData(tripData);
+  }, [addTripToData]);
+
+  const addTransaction = useMemo(() => (transaction: any) => {
+    const { userId: _, id: __, ...transactionData } = transaction;
+    addTransactionToData(transactionData);
+  }, [addTransactionToData]);
+
+  if (!migrationComplete || !settings) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -192,16 +203,6 @@ export const NewTripPageWrapper = () => {
       </div>
     );
   }
-
-  const addTrip = (trip: Trip) => {
-    const { userId, id, ...tripWithoutUserId } = trip;
-    addTripToData(tripWithoutUserId);
-  };
-
-  const addTransaction = (transaction: Transaction) => {
-    const { userId, id, ...transactionWithoutUserId } = transaction;
-    addTransactionToData(transactionWithoutUserId);
-  };
 
   return (
     <NewTripPage 
