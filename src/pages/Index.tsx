@@ -73,10 +73,7 @@ const Index = () => {
   }
 
   const addTrip = (trip: any) => {
-    // If it has an ID, it's probably from a form that generated a temporary one
-    // But our hook expects Omit<Trip, 'userId'> which might include 'id' if we're updating,
-    // or not if we're creating. The current TripForm might be sending an ID.
-    const { userId: _, ...tripData } = trip;
+    const { userId: _, id: __, ...tripData } = trip;
     addTripToData(tripData);
   };
 
@@ -86,12 +83,12 @@ const Index = () => {
   };
 
   const addRefuel = (refuel: any) => {
-    const { userId: _, ...refuelData } = refuel;
+    const { userId: _, id: __, ...refuelData } = refuel;
     addRefuelToData(refuelData);
   };
 
   const addTransaction = (transaction: any) => {
-    const { userId: _, ...transactionData } = transaction;
+    const { userId: _, id: __, ...transactionData } = transaction;
     addTransactionToData(transactionData);
   };
 
@@ -197,12 +194,12 @@ export const NewTripPageWrapper = () => {
   }
 
   const addTrip = (trip: Trip) => {
-    const { userId, ...tripWithoutUserId } = trip;
+    const { userId, id, ...tripWithoutUserId } = trip;
     addTripToData(tripWithoutUserId);
   };
 
   const addTransaction = (transaction: Transaction) => {
-    const { userId, ...transactionWithoutUserId } = transaction;
+    const { userId, id, ...transactionWithoutUserId } = transaction;
     addTransactionToData(transactionWithoutUserId);
   };
 
