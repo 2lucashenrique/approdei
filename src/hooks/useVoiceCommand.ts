@@ -39,6 +39,7 @@ export function useVoiceCommand(settings: Settings) {
             recognition.onstart = () => {
               setIsListening(true);
               setTranscript('');
+              setError(null);
             };
 
             recognition.onresult = (event: any) => {
@@ -47,10 +48,16 @@ export function useVoiceCommand(settings: Settings) {
               setTranscript(transcriptText);
             };
 
+            recognition.onerror = (event: any) => {
+              console.error('Auto-restart recognition error:', event.error);
+              setIsListening(false);
+              if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                setError('Erro no reconhecimento de voz após a fala da IA.');
+              }
+            };
+
             recognition.onend = () => {
               setIsListening(false);
-              // Access transcript from state is tricky in callback, 
-              // but handleProcess handles it via the transcript state update
             };
 
             recognition.start();
