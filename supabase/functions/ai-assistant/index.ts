@@ -32,9 +32,26 @@ Deno.serve(async (req) => {
 
     const { message, history } = await req.json();
 
+    const aiProvider = Deno.env.get("AI_PROVIDER") || "openrouter";
     const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openAiApiKey) {
-      throw new Error("Missing OpenAI API Key");
+    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
+    const openRouterModel = Deno.env.get("OPENROUTER_MODEL") || "google/gemini-2.0-flash-exp:free";
+
+    let apiKey = openAiApiKey;
+    let apiUrl = "https://api.openai.com/v1/chat/completions";
+    let model = "gpt-4o-mini";
+
+    if (aiProvider === "openrouter") {
+      if (!openRouterApiKey) {
+        throw new Error("Missing OpenRouter API Key");
+      }
+      apiKey = openRouterApiKey;
+      apiUrl = "https://openrouter.ai/api/v1/chat/completions";
+      model = openRouterModel;
+    } else {
+      if (!openAiApiKey) {
+        throw new Error("Missing OpenAI API Key");
+      }
     }
 
     // System prompt explaining tools and context
@@ -121,15 +138,17 @@ Data Atual: ${new Date().toISOString()}
       }
     ];
 
-    // First call to OpenAI to identify intent and tools
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    // First call to AI to identify intent and tools
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openAiApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://lovable.app", // Required for OpenRouter
+        "X-Title": "Assistente de Corrida",     // Optional for OpenRouter
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: model,
         messages: [
           { role: "system", content: systemPrompt },
           ...history,
@@ -229,15 +248,17 @@ Data Atual: ${new Date().toISOString()}
         toolResult = "Despesa registrada com sucesso!";
       }
 
-      // Second call to OpenAI to generate final response
-      const finalResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      // Second call to AI to generate final response
+      const finalResponse = await fetch(apiUrl, {
         method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openAiApiKey}`,
-        "Content-Type": "application/json",
-      },
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://lovable.app",
+          "X-Title": "Assistente de Corrida",
+        },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: model,
           messages: [
             { role: "system", content: systemPrompt },
             ...history,
