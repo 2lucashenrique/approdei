@@ -68,9 +68,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
       });
     }
 
-    const refuel: Refuel = {
-      id: Date.now().toString(),
-      userId: user.id,
+    const refuel: Omit<Refuel, 'id' | 'userId'> = {
       date: formData.date,
       totalValue,
       liters,

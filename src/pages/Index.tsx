@@ -72,34 +72,28 @@ const Index = () => {
     );
   }
 
-  const addTrip = (trip: Trip) => {
-    const { userId, ...tripWithoutUserId } = trip;
-    addTripToData(tripWithoutUserId);
+  const addTrip = (trip: any) => {
+    addTripToData(trip);
   };
 
   const editTrip = (updatedTrip: Trip) => {
-    const { userId, ...tripWithoutUserId } = updatedTrip;
-    updateTrip(tripWithoutUserId);
+    updateTrip(updatedTrip);
   };
 
-  const addRefuel = (refuel: Refuel) => {
-    const { userId, ...refuelWithoutUserId } = refuel;
-    addRefuelToData(refuelWithoutUserId);
+  const addRefuel = (refuel: any) => {
+    addRefuelToData(refuel);
   };
 
-  const addTransaction = (transaction: Transaction) => {
-    const { userId, ...transactionWithoutUserId } = transaction;
-    addTransactionToData(transactionWithoutUserId);
+  const addTransaction = (transaction: any) => {
+    addTransactionToData(transaction);
   };
 
   const editTransaction = (updatedTransaction: Transaction) => {
-    const { userId, ...transactionWithoutUserId } = updatedTransaction;
-    updateTransaction(transactionWithoutUserId);
+    updateTransaction(updatedTransaction);
   };
 
   const updateSettingsData = (newSettings: Settings) => {
-    const { userId, ...settingsWithoutUserId } = newSettings;
-    updateSettings(settingsWithoutUserId);
+    updateSettings(newSettings);
   };
 
   const getTabTitle = () => {

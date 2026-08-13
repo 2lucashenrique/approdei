@@ -39,9 +39,7 @@ const NewTripPage: React.FC<NewTripPageProps> = ({
     onAddTrip(trip);
     
     // Registrar como receita automaticamente
-    const transaction: Transaction = {
-      id: `trip-${trip.id}`,
-      userId: user.id,
+    const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: 'income',
       amount: trip.earnings,
       description: `Corrida - ${trip.tripCount} viagens`,

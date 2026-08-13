@@ -44,9 +44,7 @@ const AddTransactionPage: React.FC<AddTransactionPageProps> = ({
     
     if (!user) return;
     
-    const transaction: Transaction = {
-      id: Date.now().toString(),
-      userId: user.id,
+    const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: formData.type,
       amount: parseFloat(formData.amount),
       description: formData.description,
