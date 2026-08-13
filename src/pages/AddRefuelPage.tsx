@@ -47,8 +47,8 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
     
     if (!user) return;
     
-    const totalValue = parseFloat(formData.totalValue);
-    const pricePerLiter = parseFloat(formData.pricePerLiter);
+    const totalValue = parseFloat(formData.totalValue.replace(',', '.'));
+    const pricePerLiter = parseFloat(formData.pricePerLiter.replace(',', '.'));
     const liters = totalValue / pricePerLiter;
 
     // Update settings if price per liter changed
@@ -160,7 +160,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
                 <Input
                   id="totalValue"
                   type="number"
-                  step="0.01"
+                  step="any"
                   placeholder="0,00"
                   value={formData.totalValue}
                   onChange={(e) => handleChange('totalValue', e.target.value)}
@@ -173,7 +173,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
                 <Input
                   id="pricePerLiter"
                   type="number"
-                  step="0.001"
+                  step="any"
                   placeholder="0,000"
                   value={formData.pricePerLiter}
                   onChange={(e) => handleChange('pricePerLiter', e.target.value)}

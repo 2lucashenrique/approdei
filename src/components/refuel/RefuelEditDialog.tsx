@@ -70,7 +70,7 @@ const RefuelEditDialog: React.FC<RefuelEditDialogProps> = ({ refuel, onSave, onC
             <Input
               id="totalValue"
               type="number"
-              step="0.01"
+              step="any"
               value={formData.totalValue}
               onChange={(e) => handleChange('totalValue', e.target.value)}
               required
@@ -82,7 +82,7 @@ const RefuelEditDialog: React.FC<RefuelEditDialogProps> = ({ refuel, onSave, onC
             <Input
               id="pricePerLiter"
               type="number"
-              step="0.001"
+              step="any"
               value={formData.pricePerLiter}
               onChange={(e) => handleChange('pricePerLiter', e.target.value)}
               required
