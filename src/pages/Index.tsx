@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import BottomNavigation from '@/components/BottomNavigation';
 import Header from '@/components/Header';
+import AIAssistantFAB from '@/components/AIAssistantFAB';
 import Footer from '@/components/Footer';
 import HomePage from '@/pages/HomePage';
 import TripsPage from '@/pages/TripsPage';
@@ -169,6 +170,7 @@ const Index = () => {
       <main className="p-4">
         {renderContent()}
       </main>
+      <AIAssistantFAB />
       <Footer />
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
