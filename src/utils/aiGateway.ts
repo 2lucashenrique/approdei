@@ -35,6 +35,7 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
     }
 
     IMPORTANTE: Se o usuário disser "corrida", "abastecimento" ou "despesa" sem dados, mude o status para "partial" e comece a perguntar os campos.
+    Se o usuário mencionar valores, converta para número (ex: "cinquenta" -> 50).
     Responda APENAS o JSON. Seja conciso nas perguntas.
   `;
 
@@ -63,7 +64,13 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
     const result = await response.json();
     const contentString = result.choices[0].message.content;
     console.log('AI Response Content:', contentString);
-    return JSON.parse(contentString);
+    
+    try {
+      return JSON.parse(contentString);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', contentString);
+      throw new Error('Resposta da IA em formato inválido');
+    }
   } catch (error) {
     console.error('Erro na IA:', error);
     return { error: 'Ocorreu um erro ao processar sua voz. Tente novamente.' };
