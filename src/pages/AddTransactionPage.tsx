@@ -46,7 +46,7 @@ const AddTransactionPage: React.FC<AddTransactionPageProps> = ({
     
     const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: formData.type,
-      amount: parseFloat(formData.amount),
+      amount: parseFloat(formData.amount.replace(',', '.')),
       description: formData.description,
       date: formData.date,
       category: formData.category,

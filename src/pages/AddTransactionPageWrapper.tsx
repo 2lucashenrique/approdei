@@ -1,17 +1,15 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddTransactionPage from './AddTransactionPage';
-import { useIndexedDB } from '@/hooks/useIndexedDB';
 import { useMigration } from '@/hooks/useMigration';
 import { useBackButton } from '@/hooks/useBackButton';
-import { Transaction, Settings } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
+import { useUserTransactions, useUserSettings } from '@/hooks/useUserData';
+import { Transaction } from '@/types';
 
 const AddTransactionPageWrapper = () => {
   const navigate = useNavigate();
   const { migrationComplete } = useMigration();
-  const { user } = useAuth();
 
   // Hook para gerenciar botão voltar do dispositivo
   useBackButton({
@@ -19,17 +17,15 @@ const AddTransactionPageWrapper = () => {
       navigate('/', { replace: true });
     }
   });
-  const [transactions, setTransactions] = useIndexedDB<Transaction[]>('transactions', 'all', []);
-  const [settings] = useIndexedDB<Settings>('settings', 'main', {
-    userId: user?.id || '',
-    fuelPricePerLiter: 5.50,
-    platforms: ['Uber', '99', 'Particular'],
-    incomeCategories: ['Particular', 'Serviço', 'Extras', 'Gorjetas', 'Bônus'],
-    expenseCategories: ['Combustível', 'Manutenção', 'IPVA', 'Seguro', 'Lavagem', 'Estacionamento', 'Pedágio', 'Supermercado', 'Lanche', 'Outros'],
-    weeklyGoal: 1000
-  });
 
-  if (!migrationComplete) {
+  const { addTransaction: addTransactionToData } = useUserTransactions();
+  const { settings, loading: settingsLoading } = useUserSettings();
+
+  const addTransaction = useMemo(() => (transaction: Omit<Transaction, 'id' | 'userId'>) => {
+    addTransactionToData(transaction);
+  }, [addTransactionToData]);
+
+  if (!migrationComplete || settingsLoading || !settings) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -39,10 +35,6 @@ const AddTransactionPageWrapper = () => {
       </div>
     );
   }
-
-  const addTransaction = (transaction: Transaction) => {
-    setTransactions(prev => [...prev, transaction]);
-  };
 
   return (
     <AddTransactionPage 
