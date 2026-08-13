@@ -10,9 +10,9 @@ import { useBackButton } from '@/hooks/useBackButton';
 import Header from '@/components/Header';
 
 interface NewTripPageProps {
-  onAddTrip: (trip: Trip) => void;
+  onAddTrip: (trip: any) => void;
   settings: Settings;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: any) => void;
 }
 
 const NewTripPage: React.FC<NewTripPageProps> = ({ 
@@ -39,9 +39,7 @@ const NewTripPage: React.FC<NewTripPageProps> = ({
     onAddTrip(trip);
     
     // Registrar como receita automaticamente
-    const transaction: Transaction = {
-      id: `trip-${trip.id}`,
-      userId: user.id,
+    const transaction: Omit<Transaction, 'id' | 'userId'> = {
       type: 'income',
       amount: trip.earnings,
       description: `Corrida - ${trip.tripCount} viagens`,

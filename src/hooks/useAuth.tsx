@@ -1,7 +1,8 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, LoginCredentials, RegisterCredentials, AuthContextType } from '@/types/auth';
-import { dbManager } from './useIndexedDB';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,46 +19,57 @@ export const useAuthProvider = (): AuthContextType => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadCurrentUser = async () => {
-      try {
-        const currentUserId = localStorage.getItem('currentUserId');
-        if (currentUserId) {
-          const userData = await dbManager.get<User>('users', currentUserId);
-          if (userData) {
-            setUser(userData);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      } finally {
-        setIsLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata.name || '',
+          email: session.user.email || '',
+          password: '', // Password is not stored client-side
+          createdAt: session.user.created_at,
+        });
       }
-    };
+      setIsLoading(false);
+    });
 
-    loadCurrentUser();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata.name || '',
+          email: session.user.email || '',
+          password: '',
+          createdAt: session.user.created_at,
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
-      // Buscar todos os usuários para encontrar o email
-      const users = await dbManager.getAll<User>('users');
-      const user = users.find(u => u.email === credentials.email);
-      
-      if (!user) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro no login",
+          description: error.message
+        });
         return false;
       }
 
-      // Verificar senha (em produção use hash/salt adequado)
-      if (user.password !== credentials.password) {
-        return false;
-      }
-
-      setUser(user);
-      localStorage.setItem('currentUserId', user.id);
       return true;
-      
     } catch (error) {
       console.error('Erro no login:', error);
       return false;
@@ -69,28 +81,41 @@ export const useAuthProvider = (): AuthContextType => {
   const register = async (credentials: RegisterCredentials): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
-      // Verificar se email já existe
-      const users = await dbManager.getAll<User>('users');
-      const existingUser = users.find(u => u.email === credentials.email);
-      
-      if (existingUser) {
+      const { data, error } = await supabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: {
+          data: {
+            name: credentials.name,
+          }
+        }
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro no registro",
+          description: error.message
+        });
         return false;
       }
 
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: credentials.name,
-        email: credentials.email,
-        password: credentials.password, // Em produção use hash/salt adequado
-        createdAt: new Date().toISOString(),
-      };
+      if (data.user) {
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name: credentials.name,
+            email: credentials.email,
+          });
+          
+        if (profileError) {
+          console.error('Erro ao criar perfil:', profileError);
+        }
+      }
 
-      await dbManager.set('users', newUser);
-      setUser(newUser);
-      localStorage.setItem('currentUserId', newUser.id);
       return true;
-      
     } catch (error) {
       console.error('Erro no registro:', error);
       return false;
@@ -99,27 +124,31 @@ export const useAuthProvider = (): AuthContextType => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('currentUserId');
-    // Limpar cache do navegador para evitar que dados de outros usuários sejam vistos
     window.location.reload();
   };
 
   const updatePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
-    if (!user) return false;
-    
     try {
-      // Verificar senha atual
-      if (user.password !== currentPassword) {
+      // Supabase doesn't require current password for updatePassword, 
+      // but we might want to verify it if the app logic requires it.
+      // For now, using standard Supabase update.
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao atualizar senha",
+          description: error.message
+        });
         return false;
       }
 
-      const updatedUser = { ...user, password: newPassword };
-      await dbManager.set('users', updatedUser);
-      setUser(updatedUser);
       return true;
-      
     } catch (error) {
       console.error('Erro ao atualizar senha:', error);
       return false;

@@ -14,7 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      refuels: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          liters: number
+          price_per_liter: number
+          total_value: number
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          liters?: number
+          price_per_liter?: number
+          total_value?: number
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          liters?: number
+          price_per_liter?: number
+          total_value?: number
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          date: string
+          description: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          car_autonomy: number
+          created_at: string
+          date: string
+          earnings: number
+          earnings_by_platform: Json | null
+          earnings_per_hour: number
+          end_time: string
+          fuel_consumed: number
+          fuel_cost: number
+          id: string
+          km_driven: number
+          net_profit: number
+          observations: string | null
+          start_time: string
+          trip_count: number
+          trips_by_platform: Json | null
+          user_id: string
+        }
+        Insert: {
+          car_autonomy?: number
+          created_at?: string
+          date: string
+          earnings?: number
+          earnings_by_platform?: Json | null
+          earnings_per_hour?: number
+          end_time: string
+          fuel_consumed?: number
+          fuel_cost?: number
+          id?: string
+          km_driven?: number
+          net_profit?: number
+          observations?: string | null
+          start_time: string
+          trip_count?: number
+          trips_by_platform?: Json | null
+          user_id: string
+        }
+        Update: {
+          car_autonomy?: number
+          created_at?: string
+          date?: string
+          earnings?: number
+          earnings_by_platform?: Json | null
+          earnings_per_hour?: number
+          end_time?: string
+          fuel_consumed?: number
+          fuel_cost?: number
+          id?: string
+          km_driven?: number
+          net_profit?: number
+          observations?: string | null
+          start_time?: string
+          trip_count?: number
+          trips_by_platform?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          expense_categories: string[] | null
+          fuel_price_per_liter: number
+          income_categories: string[] | null
+          platforms: string[] | null
+          updated_at: string
+          user_id: string
+          weekly_goal: number | null
+        }
+        Insert: {
+          expense_categories?: string[] | null
+          fuel_price_per_liter?: number
+          income_categories?: string[] | null
+          platforms?: string[] | null
+          updated_at?: string
+          user_id: string
+          weekly_goal?: number | null
+        }
+        Update: {
+          expense_categories?: string[] | null
+          fuel_price_per_liter?: number
+          income_categories?: string[] | null
+          platforms?: string[] | null
+          updated_at?: string
+          user_id?: string
+          weekly_goal?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

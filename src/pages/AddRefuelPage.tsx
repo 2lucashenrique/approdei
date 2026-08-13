@@ -14,7 +14,7 @@ import Header from '@/components/Header';
 
 interface AddRefuelPageProps {
   settings: Settings;
-  onAddRefuel: (refuel: Refuel) => void;
+  onAddRefuel: (refuel: any) => void;
   onSettingsUpdate: (settings: Settings) => void;
 }
 
@@ -68,9 +68,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
       });
     }
 
-    const refuel: Refuel = {
-      id: Date.now().toString(),
-      userId: user.id,
+    const refuel: Omit<Refuel, 'id' | 'userId'> = {
       date: formData.date,
       totalValue,
       liters,
