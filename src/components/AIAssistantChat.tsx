@@ -36,13 +36,21 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({ onClose }) => {
 
     try {
       const result = await sendMessageToAssistant(text, messages);
-      const assistantMessage: Message = { role: 'assistant', content: result.text };
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      const assistantMessage: Message = { role: 'assistant', content: result.text || "Desculpe, não consegui processar sua solicitação." };
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('AI Assistant Error:', error);
       toast({
         variant: "destructive",
         title: "Erro no Assistente",
-        description: "Não foi possível processar sua mensagem."
+        description: error.message?.includes("Missing OpenRouter API Key") 
+          ? "Configure a OPENROUTER_API_KEY no painel de segredos."
+          : "Não foi possível processar sua mensagem. Tente novamente em alguns segundos."
       });
     } finally {
       setIsLoading(false);
