@@ -1,4 +1,3 @@
-
 export const AI_GATEWAY_URL = 'https://api.lovable.dev/v1/ai/chat/completions';
 
 export async function processVoiceCommand(messages: { role: 'user' | 'assistant', content: string }[], settings: any) {
@@ -40,6 +39,9 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
   `;
 
   try {
+    // Note: In Lovable sandbox, the AI Gateway is handled by the platform.
+    // We just need to make sure we're sending the request to the correct internal proxy if needed,
+    // but the current URL and structure are correct for the AI Gateway.
     const response = await fetch(AI_GATEWAY_URL, {
       method: 'POST',
       headers: {
@@ -56,23 +58,35 @@ export async function processVoiceCommand(messages: { role: 'user' | 'assistant'
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('AI Gateway Error Response:', errorData);
-      throw new Error(`Falha na API: ${response.status}`);
+      let errorDetail = '';
+      try {
+        const errorData = await response.json();
+        errorDetail = JSON.stringify(errorData);
+      } catch (e) {
+        errorDetail = await response.text();
+      }
+      console.error('AI Gateway Error:', response.status, errorDetail);
+      throw new Error(`Erro na API (${response.status})`);
     }
 
     const result = await response.json();
+    
+    if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+      console.error('Unexpected AI response structure:', result);
+      throw new Error('Resposta inesperada da IA');
+    }
+
     const contentString = result.choices[0].message.content;
-    console.log('AI Response Content:', contentString);
+    console.log('AI Response:', contentString);
     
     try {
       return JSON.parse(contentString);
     } catch (parseError) {
-      console.error('JSON Parse Error:', contentString);
-      throw new Error('Resposta da IA em formato inválido');
+      console.error('JSON Parse Error:', contentString, parseError);
+      throw new Error('Erro ao processar dados da IA');
     }
   } catch (error) {
-    console.error('Erro na IA:', error);
-    return { error: 'Ocorreu um erro ao processar sua voz. Tente novamente.' };
+    console.error('Detailed AI Error:', error);
+    return { error: 'Desculpe, não consegui processar sua voz agora. Tente novamente em instantes.' };
   }
 }
