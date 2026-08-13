@@ -73,27 +73,36 @@ const Index = () => {
   }
 
   const addTrip = (trip: any) => {
-    addTripToData(trip);
+    // If it has an ID, it's probably from a form that generated a temporary one
+    // But our hook expects Omit<Trip, 'userId'> which might include 'id' if we're updating,
+    // or not if we're creating. The current TripForm might be sending an ID.
+    const { userId: _, ...tripData } = trip;
+    addTripToData(tripData);
   };
 
   const editTrip = (updatedTrip: Trip) => {
-    updateTrip(updatedTrip);
+    const { userId: _, ...tripData } = updatedTrip;
+    updateTrip(tripData);
   };
 
   const addRefuel = (refuel: any) => {
-    addRefuelToData(refuel);
+    const { userId: _, ...refuelData } = refuel;
+    addRefuelToData(refuelData);
   };
 
   const addTransaction = (transaction: any) => {
-    addTransactionToData(transaction);
+    const { userId: _, ...transactionData } = transaction;
+    addTransactionToData(transactionData);
   };
 
   const editTransaction = (updatedTransaction: Transaction) => {
-    updateTransaction(updatedTransaction);
+    const { userId: _, ...transactionData } = updatedTransaction;
+    updateTransaction(transactionData);
   };
 
   const updateSettingsData = (newSettings: Settings) => {
-    updateSettings(newSettings);
+    const { userId: _, ...settingsData } = newSettings;
+    updateSettings(settingsData);
   };
 
   const getTabTitle = () => {
