@@ -8,6 +8,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Refuel, Settings } from '@/types';
 import { formatNumber } from '@/utils/calculations';
 import { useAuth } from '@/hooks/useAuth';
+import { Mic, MicOff } from 'lucide-react';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { toast } from '@/hooks/use-toast';
 
 interface RefuelFormProps {
   onSubmit: (refuel: Refuel) => void;
@@ -17,12 +20,65 @@ interface RefuelFormProps {
 
 const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsUpdate }) => {
   const { user } = useAuth();
+  const { isListening, startListening } = useVoiceRecognition();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     totalValue: '',
     pricePerLiter: settings.fuelPricePerLiter.toString(),
     type: 'work' as 'work' | 'personal',
   });
+
+  const parseVoiceCommand = (text: string) => {
+    const lowerText = text.toLowerCase();
+    
+    // Regex patterns
+    const moneyPattern = /(\d+[\d\s,.]*)\s*(reais|real|R\$)/g;
+    
+    let amount = formData.totalValue;
+    let price = formData.pricePerLiter;
+    let type = formData.type;
+
+    // Detect amounts
+    const moneyMatches = [...lowerText.matchAll(moneyPattern)];
+    if (moneyMatches.length >= 1) {
+      amount = moneyMatches[0][1].replace(',', '.').replace(/\s/g, '');
+      if (moneyMatches.length >= 2) {
+        price = moneyMatches[1][1].replace(',', '.').replace(/\s/g, '');
+      }
+    } else {
+      // Look for numbers if no "reais" mention
+      const numbers = lowerText.match(/(\d+[,.]?\d*)/g);
+      if (numbers && numbers.length >= 1) {
+        amount = numbers[0].replace(',', '.');
+        if (numbers.length >= 2) {
+          price = numbers[1].replace(',', '.');
+        }
+      }
+    }
+
+    // Detect type
+    if (lowerText.includes('pessoal') || lowerText.includes('casa')) {
+      type = 'personal';
+    } else if (lowerText.includes('trabalho') || lowerText.includes('uber') || lowerText.includes('trampo')) {
+      type = 'work';
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      totalValue: amount,
+      pricePerLiter: price,
+      type: type
+    }));
+
+    toast({
+      title: "Voz processada",
+      description: "Dados de abastecimento preenchidos.",
+    });
+  };
+
+  const handleVoiceButtonClick = () => {
+    startListening(parseVoiceCommand);
+  };
 
   // Update pricePerLiter when settings change (e.g., from SettingsPage)
   React.useEffect(() => {
@@ -85,8 +141,18 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
 
   return (
     <Card className="mb-4">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg">Novo Abastecimento</CardTitle>
+        <Button 
+          type="button"
+          variant={isListening ? "destructive" : "outline"}
+          size="sm"
+          onClick={handleVoiceButtonClick}
+          className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
+        >
+          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+          {isListening ? 'Ouvindo...' : 'Por Voz'}
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
