@@ -25,8 +25,8 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
     date: new Date().toISOString().split('T')[0],
     startTime: '',
     endTime: '',
-    kmDriven: settings.carAutonomy ? '' : '', // Placeholder to keep structure
-    carAutonomy: settings.carAutonomy?.toString() || '',
+    kmDriven: '',
+    carAutonomy: '',
     observations: '',
   });
 
