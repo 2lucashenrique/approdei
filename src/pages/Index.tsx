@@ -170,7 +170,6 @@ const Index = () => {
       <main className="p-4">
         {renderContent()}
       </main>
-      <AIAssistantFAB />
       <Footer />
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>

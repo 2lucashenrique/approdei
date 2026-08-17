@@ -9,6 +9,9 @@ import { Trip, Settings } from '@/types';
 import { calculateFuelConsumed, calculateFuelCost, calculateNetProfit, calculateEarningsPerHour, calculateHoursWorked } from '@/utils/calculations';
 import PlatformTripSelector from './PlatformTripSelector';
 import { useAuth } from '@/hooks/useAuth';
+import { Mic, MicOff, Wand2 } from 'lucide-react';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { toast } from '@/hooks/use-toast';
 
 interface TripFormProps {
   onSubmit: (trip: Trip) => void;
@@ -17,6 +20,7 @@ interface TripFormProps {
 
 const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   const { user } = useAuth();
+  const { isListening, startListening } = useVoiceRecognition();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     startTime: '',
@@ -28,6 +32,89 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
 
   const [tripsByPlatform, setTripsByPlatform] = useState<{ [platform: string]: number }>({});
   const [earningsByPlatform, setEarningsByPlatform] = useState<{ [platform: string]: number }>({});
+
+  const parseVoiceCommand = (text: string) => {
+    const lowerText = text.toLowerCase();
+    console.log("Processando comando de voz:", lowerText);
+
+    // Regex patterns
+    const moneyPattern = /(\d+[\d\s,.]*)\s*(reais|real|R\$)/g;
+    const numberPattern = /(\d+[\d\s,.]*)/g;
+    const timePattern = /(\d{1,2})[:h](\d{0,2})/g;
+
+    // Detect platforms
+    const detectedPlatforms: { [key: string]: number } = {};
+    const detectedEarnings: { [key: string]: number } = {};
+    
+    if (settings.platforms) {
+      settings.platforms.forEach(p => {
+        const pLower = p.toLowerCase();
+        if (lowerText.includes(pLower)) {
+          // Look for amount near platform name
+          const index = lowerText.indexOf(pLower);
+          const subText = lowerText.substring(index, index + 30);
+          const match = subText.match(/(\d+[,.]?\d*)/);
+          if (match) {
+            detectedEarnings[p] = parseFloat(match[1].replace(',', '.'));
+            detectedPlatforms[p] = 1; // Default to 1 trip if not specified
+          }
+        }
+      });
+    }
+
+    // Fallback if no specific platform earnings found but generic "X reais" exists
+    if (Object.keys(detectedEarnings).length === 0) {
+      const moneyMatch = [...lowerText.matchAll(moneyPattern)];
+      if (moneyMatch.length > 0) {
+        const amount = parseFloat(moneyMatch[0][1].replace(',', '.').replace(/\s/g, ''));
+        if (settings.platforms && settings.platforms.length > 0) {
+          detectedEarnings[settings.platforms[0]] = amount;
+          detectedPlatforms[settings.platforms[0]] = 1;
+        } else {
+          detectedEarnings['Geral'] = amount;
+          detectedPlatforms['Geral'] = 1;
+        }
+      }
+    }
+
+    // Detect KM and Autonomy
+    let km = formData.kmDriven;
+    if (lowerText.includes('km') || lowerText.includes('quilômetros')) {
+      const match = lowerText.match(/(\d+[,.]?\d*)\s*(km|quilômetros)/);
+      if (match) km = match[1].replace(',', '.');
+    }
+
+    // Detect Times
+    let start = formData.startTime;
+    let end = formData.endTime;
+    const times = [...lowerText.matchAll(timePattern)];
+    if (times.length >= 2) {
+      start = `${times[0][1].padStart(2, '0')}:${(times[0][2] || '00').padEnd(2, '0')}`;
+      end = `${times[1][1].padStart(2, '0')}:${(times[1][2] || '00').padEnd(2, '0')}`;
+    }
+
+    // Apply changes
+    if (Object.keys(detectedEarnings).length > 0) {
+      setEarningsByPlatform(prev => ({ ...prev, ...detectedEarnings }));
+      setTripsByPlatform(prev => ({ ...prev, ...detectedPlatforms }));
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      kmDriven: km,
+      startTime: start,
+      endTime: end
+    }));
+
+    toast({
+      title: "Voz processada",
+      description: "Campos preenchidos com base na sua fala.",
+    });
+  };
+
+  const handleVoiceButtonClick = () => {
+    startListening(parseVoiceCommand);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +168,18 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
 
   return (
     <Card className="mb-4">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg">Nova Corrida</CardTitle>
+        <Button 
+          type="button"
+          variant={isListening ? "destructive" : "outline"}
+          size="sm"
+          onClick={handleVoiceButtonClick}
+          className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
+        >
+          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+          {isListening ? 'Ouvindo...' : 'Preencher por Voz'}
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
