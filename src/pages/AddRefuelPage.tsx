@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff } from 'lucide-react';
 import { Refuel, Settings } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
+import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 
 interface AddRefuelPageProps {
   settings: Settings;
@@ -26,6 +27,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isListening, startListening } = useVoiceRecognition();
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -33,6 +35,53 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
     pricePerLiter: settings.fuelPricePerLiter.toString(),
     type: 'work' as 'work' | 'personal',
   });
+
+  const parseVoiceCommand = (text: string) => {
+    const lowerText = text.toLowerCase();
+    const moneyPattern = /(\d+[\d\s,.]*)\s*(reais|real|R\$)/g;
+    
+    let amount = formData.totalValue;
+    let price = formData.pricePerLiter;
+    let type = formData.type;
+
+    const moneyMatches = [...lowerText.matchAll(moneyPattern)];
+    if (moneyMatches.length >= 1) {
+      amount = moneyMatches[0][1].replace(',', '.').replace(/\s/g, '');
+      if (moneyMatches.length >= 2) {
+        price = moneyMatches[1][1].replace(',', '.').replace(/\s/g, '');
+      }
+    } else {
+      const numbers = lowerText.match(/(\d+[,.]?\d*)/g);
+      if (numbers && numbers.length >= 1) {
+        amount = numbers[0].replace(',', '.');
+        if (numbers.length >= 2) {
+          price = numbers[1].replace(',', '.');
+        }
+      }
+    }
+
+    if (lowerText.includes('pessoal') || lowerText.includes('casa')) {
+      type = 'personal';
+    } else if (lowerText.includes('trabalho') || lowerText.includes('uber') || lowerText.includes('trampo')) {
+      type = 'work';
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      totalValue: amount,
+      pricePerLiter: price,
+      type: type
+    }));
+
+    toast({
+      title: "Voz processada",
+      description: "Dados de abastecimento preenchidos.",
+    });
+  };
+
+  const handleVoiceButtonClick = () => {
+    startListening(parseVoiceCommand);
+  };
 
   // Update pricePerLiter when settings change
   React.useEffect(() => {
@@ -119,8 +168,18 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
 
         {/* Formulário */}
         <Card className="max-w-md mx-auto">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg">Novo Abastecimento</CardTitle>
+            <Button 
+              type="button"
+              variant={isListening ? "destructive" : "outline"}
+              size="sm"
+              onClick={handleVoiceButtonClick}
+              className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
+            >
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              {isListening ? 'Ouvindo...' : 'Por Voz'}
+            </Button>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
