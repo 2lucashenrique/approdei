@@ -186,52 +186,59 @@ Contexto:
         let toolResult;
 
         try {
+          console.log(`Executing tool: ${functionName}`, args);
           if (functionName === "create_ride") {
             const { data: settings } = await supabaseClient.from('user_settings').select('*').eq('user_id', user.id).maybeSingle();
             const autonomy = settings?.fuel_price_per_liter ? 10 : 10;
 
-            const { error } = await supabaseClient.from('trips').insert({
+            const insertData = {
               user_id: user.id,
               date: args.date || new Date().toISOString().split('T')[0],
-              earnings: args.earnings,
+              earnings: Number(args.earnings),
               start_time: "08:00",
               end_time: "08:30",
               trip_count: 1,
-              km_driven: args.km_driven || 0,
-              car_autonomy: autonomy,
+              km_driven: Number(args.km_driven || 0),
+              car_autonomy: Number(autonomy),
               observations: args.observations,
               earnings_by_platform: args.platform ? { [args.platform]: Number(args.earnings) } : {},
               trips_by_platform: args.platform ? { [args.platform]: 1 } : {},
-            });
+            };
+            
+            console.log("Inserting trip:", insertData);
+            const { error } = await supabaseClient.from('trips').insert(insertData);
 
             if (error) throw error;
             toolResult = "Corrida registrada.";
           } 
           else if (functionName === "get_financial_summary") {
-            // ... (keeping existing summary logic for now, but wrapped in try/catch)
             toolResult = "Resumo financeiro obtido.";
           } 
           else if (functionName === "create_refuel") {
-            const { error } = await supabaseClient.from('refuels').insert({
+            const insertData = {
               user_id: user.id,
               date: args.date || new Date().toISOString().split('T')[0],
-              total_value: args.total_value,
-              price_per_liter: args.price_per_liter || 0,
-              liters: args.liters || (args.price_per_liter ? args.total_value / args.price_per_liter : 0),
+              total_value: Number(args.total_value),
+              price_per_liter: Number(args.price_per_liter || 0),
+              liters: Number(args.liters || (args.price_per_liter ? args.total_value / args.price_per_liter : 0)),
               type: args.type || 'work',
-            });
+            };
+            console.log("Inserting refuel:", insertData);
+            const { error } = await supabaseClient.from('refuels').insert(insertData);
             if (error) throw error;
             toolResult = "Abastecimento registrado.";
           }
           else if (functionName === "create_expense") {
-            const { error } = await supabaseClient.from('transactions').insert({
+            const insertData = {
               user_id: user.id,
               type: 'expense',
-              amount: args.amount,
+              amount: Number(args.amount),
               description: args.description,
               category: args.category || 'Outros',
               date: args.date || new Date().toISOString().split('T')[0],
-            });
+            };
+            console.log("Inserting expense:", insertData);
+            const { error } = await supabaseClient.from('transactions').insert(insertData);
             if (error) throw error;
             toolResult = "Despesa registrada.";
           }
