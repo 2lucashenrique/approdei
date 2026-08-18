@@ -200,7 +200,7 @@ Contexto:
               km_driven: args.km_driven || 0,
               car_autonomy: autonomy,
               observations: args.observations,
-              earnings_by_platform: args.platform ? { [args.platform]: args.earnings } : {},
+              earnings_by_platform: args.platform ? { [args.platform]: Number(args.earnings) } : {},
               trips_by_platform: args.platform ? { [args.platform]: 1 } : {},
             });
 
