@@ -81,9 +81,11 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
         }
       }
       else if (currentStep === 3) { // Save Confirmation
-        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode')) {
+        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode') || lowerText.includes('com certeza')) {
           speak("Salvando abastecimento.");
-          document.getElementById('refuel-submit-btn-page')?.click();
+          setTimeout(() => {
+            document.getElementById('refuel-submit-btn-page')?.click();
+          }, 1000);
         } else {
           speak("Entendido. Você pode revisar e salvar manualmente.");
         }
@@ -98,7 +100,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
       else if (currentStep === 3) prompt = "Deseja salvar o abastecimento?";
 
       speak(prompt, () => {
-        startListening(processStep);
+        setTimeout(() => startListening(processStep), 300);
       });
     };
 
