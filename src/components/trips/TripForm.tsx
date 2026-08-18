@@ -20,7 +20,7 @@ interface TripFormProps {
 
 const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   const { user } = useAuth();
-  const { isListening, startListening } = useVoiceRecognition();
+  const { isListening, startListening, speak } = useVoiceRecognition();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     startTime: '',
@@ -113,7 +113,32 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   };
 
   const handleVoiceButtonClick = () => {
-    startListening(parseVoiceCommand);
+    // New interactive flow
+    const steps = [
+      { field: 'startTime', prompt: 'Qual o horário de início?' },
+      { field: 'endTime', prompt: 'Qual o horário de término?' },
+      { field: 'kmDriven', prompt: 'Quantos quilômetros foram rodados?' },
+      { field: 'carAutonomy', prompt: 'Qual a autonomia do carro?' },
+    ];
+
+    let currentStep = 0;
+
+    const askNext = () => {
+      if (currentStep < steps.length) {
+        speak(steps[currentStep].prompt, () => {
+          startListening((text) => {
+            const val = text.match(/(\d+[\d\s,.]*)/)?.[1].replace(',', '.') || '';
+            setFormData(prev => ({ ...prev, [steps[currentStep].field]: val }));
+            currentStep++;
+            askNext();
+          });
+        });
+      } else {
+        speak("Todos os campos foram preenchidos. Deseja salvar a corrida?");
+      }
+    };
+
+    askNext();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
