@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, Mic } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Refuel, Settings } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -101,16 +101,6 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
         <Card className="max-w-md mx-auto">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg">Novo Abastecimento</CardTitle>
-            <Button 
-              type="button"
-              variant={isListening ? "destructive" : "outline"}
-              size="sm"
-              onClick={handleVoiceButtonClick}
-              className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
-            >
-              <Mic size={16} />
-              {isListening ? 'Ouvindo...' : 'Por Voz'}
-            </Button>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
