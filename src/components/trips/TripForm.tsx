@@ -9,7 +9,7 @@ import { Trip, Settings } from '@/types';
 import { calculateFuelConsumed, calculateFuelCost, calculateNetProfit, calculateEarningsPerHour, calculateHoursWorked } from '@/utils/calculations';
 import PlatformTripSelector from './PlatformTripSelector';
 import { useAuth } from '@/hooks/useAuth';
-import { Mic } from 'lucide-react';
+
 import { toast } from '@/hooks/use-toast';
 
 interface TripFormProps {
@@ -104,16 +104,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
     <Card className="mb-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg">Nova Corrida</CardTitle>
-        <Button 
-          type="button"
-          variant={isListening ? "destructive" : "outline"}
-          size="sm"
-          onClick={handleVoiceButtonClick}
-          className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
-        >
-          <Mic size={16} />
-          {isListening ? 'Ouvindo...' : 'Preencher por Voz'}
-        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

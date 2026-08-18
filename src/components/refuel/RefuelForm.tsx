@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Refuel, Settings } from '@/types';
 import { formatNumber } from '@/utils/calculations';
 import { useAuth } from '@/hooks/useAuth';
-import { Mic } from 'lucide-react';
+
 import { toast } from '@/hooks/use-toast';
 
 interface RefuelFormProps {
@@ -100,16 +100,6 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
     <Card className="mb-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg">Novo Abastecimento</CardTitle>
-        <Button 
-          type="button"
-          variant={isListening ? "destructive" : "outline"}
-          size="sm"
-          onClick={handleVoiceButtonClick}
-          className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
-        >
-          <Mic size={16} />
-          {isListening ? 'Ouvindo...' : 'Preencher por Voz'}
-        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
