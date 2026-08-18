@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Trip, Settings } from '@/types';
 import { calculateFuelConsumed, calculateFuelCost, calculateNetProfit, calculateEarningsPerHour, calculateHoursWorked } from '@/utils/calculations';
 import PlatformTripSelector from './PlatformTripSelector';
 import { useAuth } from '@/hooks/useAuth';
-import { Mic, MicOff, Wand2 } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { toast } from '@/hooks/use-toast';
 
@@ -20,7 +20,7 @@ interface TripFormProps {
 
 const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   const { user } = useAuth();
-  const { isListening, startListening } = useVoiceRecognition();
+  const { isListening, startListening, speak } = useVoiceRecognition();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     startTime: '',
@@ -33,87 +33,136 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   const [tripsByPlatform, setTripsByPlatform] = useState<{ [platform: string]: number }>({});
   const [earningsByPlatform, setEarningsByPlatform] = useState<{ [platform: string]: number }>({});
 
-  const parseVoiceCommand = (text: string) => {
-    const lowerText = text.toLowerCase();
-    console.log("Processando comando de voz:", lowerText);
-
-    // Regex patterns
-    const moneyPattern = /(\d+[\d\s,.]*)\s*(reais|real|R\$)/g;
-    const numberPattern = /(\d+[\d\s,.]*)/g;
-    const timePattern = /(\d{1,2})[:h](\d{0,2})/g;
-
-    // Detect platforms
-    const detectedPlatforms: { [key: string]: number } = {};
-    const detectedEarnings: { [key: string]: number } = {};
-    
-    if (settings.platforms) {
-      settings.platforms.forEach(p => {
-        const pLower = p.toLowerCase();
-        if (lowerText.includes(pLower)) {
-          // Look for amount near platform name
-          const index = lowerText.indexOf(pLower);
-          const subText = lowerText.substring(index, index + 30);
-          const match = subText.match(/(\d+[,.]?\d*)/);
-          if (match) {
-            detectedEarnings[p] = parseFloat(match[1].replace(',', '.'));
-            detectedPlatforms[p] = 1; // Default to 1 trip if not specified
-          }
-        }
-      });
-    }
-
-    // Fallback if no specific platform earnings found but generic "X reais" exists
-    if (Object.keys(detectedEarnings).length === 0) {
-      const moneyMatch = [...lowerText.matchAll(moneyPattern)];
-      if (moneyMatch.length > 0) {
-        const amount = parseFloat(moneyMatch[0][1].replace(',', '.').replace(/\s/g, ''));
-        if (settings.platforms && settings.platforms.length > 0) {
-          detectedEarnings[settings.platforms[0]] = amount;
-          detectedPlatforms[settings.platforms[0]] = 1;
-        } else {
-          detectedEarnings['Geral'] = amount;
-          detectedPlatforms['Geral'] = 1;
-        }
-      }
-    }
-
-    // Detect KM and Autonomy
-    let km = formData.kmDriven;
-    if (lowerText.includes('km') || lowerText.includes('quilômetros')) {
-      const match = lowerText.match(/(\d+[,.]?\d*)\s*(km|quilômetros)/);
-      if (match) km = match[1].replace(',', '.');
-    }
-
-    // Detect Times
-    let start = formData.startTime;
-    let end = formData.endTime;
-    const times = [...lowerText.matchAll(timePattern)];
-    if (times.length >= 2) {
-      start = `${times[0][1].padStart(2, '0')}:${(times[0][2] || '00').padEnd(2, '0')}`;
-      end = `${times[1][1].padStart(2, '0')}:${(times[1][2] || '00').padEnd(2, '0')}`;
-    }
-
-    // Apply changes
-    if (Object.keys(detectedEarnings).length > 0) {
-      setEarningsByPlatform(prev => ({ ...prev, ...detectedEarnings }));
-      setTripsByPlatform(prev => ({ ...prev, ...detectedPlatforms }));
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      kmDriven: km,
-      startTime: start,
-      endTime: end
-    }));
-
-    toast({
-      title: "Voz processada",
-      description: "Campos preenchidos com base na sua fala.",
-    });
-  };
+  const stateRef = useRef({ formData, tripsByPlatform, earningsByPlatform });
+  stateRef.current = { formData, tripsByPlatform, earningsByPlatform };
 
   const handleVoiceButtonClick = () => {
-    startListening(parseVoiceCommand);
+    if (isListening) return;
+
+    let currentStep = 0;
+    const platforms = settings.platforms || [];
+    let platformIndex = 0;
+    
+    // Steps: 
+    // 0: startTime
+    // 1: endTime
+    // 2: Platform Loop (Ganhos -> Corridas)
+    // 3: kmDriven
+    // 4: carAutonomy
+    // 5: Save Confirmation
+
+    const processStep = (text: string) => {
+      const lowerText = text.toLowerCase();
+      const numberMatch = text.match(/(\d+[,.]?\d*)/);
+      const number = numberMatch ? numberMatch[1].replace(',', '.') : null;
+
+      if (currentStep === 0) { // Start Time
+        const timeMatch = text.match(/(\d{1,2})[:h](\d{0,2})/);
+        if (timeMatch) {
+          const val = `${timeMatch[1].padStart(2, '0')}:${(timeMatch[2] || '00').padEnd(2, '0')}`;
+          setFormData(prev => ({ ...prev, startTime: val }));
+          currentStep = 1;
+          askQuestion();
+        } else if (number) {
+          setFormData(prev => ({ ...prev, startTime: `${number.padStart(2, '0')}:00` }));
+          currentStep = 1;
+          askQuestion();
+        } else {
+          speak("Não entendi o horário. Pode repetir o horário de início?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      } 
+      else if (currentStep === 1) { // End Time
+        const timeMatch = text.match(/(\d{1,2})[:h](\d{0,2})/);
+        if (timeMatch) {
+          const val = `${timeMatch[1].padStart(2, '0')}:${(timeMatch[2] || '00').padEnd(2, '0')}`;
+          setFormData(prev => ({ ...prev, endTime: val }));
+          currentStep = 2;
+          askQuestion();
+        } else if (number) {
+          setFormData(prev => ({ ...prev, endTime: `${number.padStart(2, '0')}:00` }));
+          currentStep = 2;
+          askQuestion();
+        } else {
+          speak("Não entendi o horário. Pode repetir o horário de término?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 2) { // Platform Earnings
+        if (number) {
+          const platform = platforms[platformIndex] || 'Geral';
+          setEarningsByPlatform(prev => ({ ...prev, [platform]: parseFloat(number) }));
+          currentStep = 3;
+          askQuestion();
+        } else {
+          speak("Não entendi o valor. Quanto você ganhou?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 3) { // Platform Trips
+        if (number) {
+          const platform = platforms[platformIndex] || 'Geral';
+          setTripsByPlatform(prev => ({ ...prev, [platform]: parseInt(number) }));
+          
+          if (platformIndex < platforms.length - 1) {
+            platformIndex++;
+            currentStep = 2; // Back to earnings for next platform
+          } else {
+            currentStep = 4; // Next to KM
+          }
+          askQuestion();
+        } else {
+          speak("Não entendi a quantidade. Quantas corridas você fez?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 4) { // KM Driven
+        if (number) {
+          setFormData(prev => ({ ...prev, kmDriven: number }));
+          currentStep = 5;
+          askQuestion();
+        } else {
+          speak("Não entendi a quilometragem. Quantos quilômetros você rodou?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 5) { // Autonomy
+        if (number) {
+          setFormData(prev => ({ ...prev, carAutonomy: number }));
+          currentStep = 6;
+          askQuestion();
+        } else {
+          speak("Não entendi a autonomia. Qual a autonomia do carro?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 6) { // Save Confirmation
+        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode')) {
+          speak("Salvando corrida.");
+          // We need to trigger submit manually or call it
+          document.getElementById('trip-submit-btn')?.click();
+        } else {
+          speak("Entendido. Você pode revisar os dados e salvar manualmente.");
+        }
+      }
+    };
+
+    const askQuestion = () => {
+      let prompt = "";
+      if (currentStep === 0) prompt = "Qual o horário de início?";
+      else if (currentStep === 1) prompt = "Qual o horário de término?";
+      else if (currentStep === 2) prompt = `Quanto você ganhou na ${platforms[platformIndex] || 'plataforma'}?`;
+      else if (currentStep === 3) prompt = `Quantas corridas você fez na ${platforms[platformIndex] || 'plataforma'}?`;
+      else if (currentStep === 4) prompt = "Quantos quilômetros foram rodados?";
+      else if (currentStep === 5) prompt = "Qual a autonomia do carro?";
+      else if (currentStep === 6) prompt = "Deseja salvar a corrida?";
+
+      speak(prompt, () => {
+        startListening(processStep);
+      });
+    };
+
+    askQuestion();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -160,6 +209,11 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
     });
     setTripsByPlatform({});
     setEarningsByPlatform({});
+    
+    toast({
+      title: "Corrida adicionada!",
+      description: "Os dados foram salvos com sucesso.",
+    });
   };
 
   const handleChange = (field: string, value: string) => {
@@ -177,7 +231,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
           onClick={handleVoiceButtonClick}
           className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
         >
-          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+          <Mic size={16} />
           {isListening ? 'Ouvindo...' : 'Preencher por Voz'}
         </Button>
       </CardHeader>
@@ -262,7 +316,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" id="trip-submit-btn" className="w-full">
             Adicionar Corrida
           </Button>
         </form>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ interface RefuelFormProps {
 
 const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsUpdate }) => {
   const { user } = useAuth();
-  const { isListening, startListening } = useVoiceRecognition();
+  const { isListening, startListening, speak } = useVoiceRecognition();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     totalValue: '',
@@ -28,59 +28,82 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
     type: 'work' as 'work' | 'personal',
   });
 
-  const parseVoiceCommand = (text: string) => {
-    const lowerText = text.toLowerCase();
-    
-    // Regex patterns
-    const moneyPattern = /(\d+[\d\s,.]*)\s*(reais|real|R\$)/g;
-    
-    let amount = formData.totalValue;
-    let price = formData.pricePerLiter;
-    let type = formData.type;
+  const handleVoiceButtonClick = () => {
+    if (isListening) return;
 
-    // Detect amounts
-    const moneyMatches = [...lowerText.matchAll(moneyPattern)];
-    if (moneyMatches.length >= 1) {
-      amount = moneyMatches[0][1].replace(',', '.').replace(/\s/g, '');
-      if (moneyMatches.length >= 2) {
-        price = moneyMatches[1][1].replace(',', '.').replace(/\s/g, '');
-      }
-    } else {
-      // Look for numbers if no "reais" mention
-      const numbers = lowerText.match(/(\d+[,.]?\d*)/g);
-      if (numbers && numbers.length >= 1) {
-        amount = numbers[0].replace(',', '.');
-        if (numbers.length >= 2) {
-          price = numbers[1].replace(',', '.');
+    let currentStep = 0;
+    
+    // Steps:
+    // 0: totalValue
+    // 1: pricePerLiter
+    // 2: type (work/personal)
+    // 3: Save Confirmation
+
+    const processStep = (text: string) => {
+      const lowerText = text.toLowerCase();
+      const numberMatch = text.match(/(\d+[,.]?\d*)/);
+      const number = numberMatch ? numberMatch[1].replace(',', '.') : null;
+
+      if (currentStep === 0) { // Total Value
+        if (number) {
+          setFormData(prev => ({ ...prev, totalValue: number }));
+          currentStep = 1;
+          askQuestion();
+        } else {
+          speak("Não entendi o valor. Qual o valor total abastecido?");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      } 
+      else if (currentStep === 1) { // Price per liter
+        if (number) {
+          setFormData(prev => ({ ...prev, pricePerLiter: number }));
+          currentStep = 2;
+          askQuestion();
+        } else {
+          speak("Não entendi o preço. Qual o valor por litro?");
+          setTimeout(() => startListening(processStep), 2000);
         }
       }
-    }
+      else if (currentStep === 2) { // Type
+        if (lowerText.includes('trabalho') || lowerText.includes('uber') || lowerText.includes('trampo')) {
+          setFormData(prev => ({ ...prev, type: 'work' }));
+          currentStep = 3;
+          askQuestion();
+        } else if (lowerText.includes('pessoal') || lowerText.includes('casa')) {
+          setFormData(prev => ({ ...prev, type: 'personal' }));
+          currentStep = 3;
+          askQuestion();
+        } else {
+          speak("Diga se é trabalho ou pessoal.");
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 3) { // Save Confirmation
+        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode')) {
+          speak("Salvando abastecimento.");
+          document.getElementById('refuel-submit-btn')?.click();
+        } else {
+          speak("Entendido. Você pode revisar e salvar manualmente.");
+        }
+      }
+    };
 
-    // Detect type
-    if (lowerText.includes('pessoal') || lowerText.includes('casa')) {
-      type = 'personal';
-    } else if (lowerText.includes('trabalho') || lowerText.includes('uber') || lowerText.includes('trampo')) {
-      type = 'work';
-    }
+    const askQuestion = () => {
+      let prompt = "";
+      if (currentStep === 0) prompt = "Qual o valor total abastecido?";
+      else if (currentStep === 1) prompt = "Qual o valor por litro?";
+      else if (currentStep === 2) prompt = "O abastecimento é para trabalho ou pessoal?";
+      else if (currentStep === 3) prompt = "Deseja salvar o abastecimento?";
 
-    setFormData(prev => ({
-      ...prev,
-      totalValue: amount,
-      pricePerLiter: price,
-      type: type
-    }));
+      speak(prompt, () => {
+        startListening(processStep);
+      });
+    };
 
-    toast({
-      title: "Voz processada",
-      description: "Dados de abastecimento preenchidos.",
-    });
+    askQuestion();
   };
 
-  const handleVoiceButtonClick = () => {
-    startListening(parseVoiceCommand);
-  };
-
-  // Update pricePerLiter when settings change (e.g., from SettingsPage)
+  // Update pricePerLiter when settings change
   React.useEffect(() => {
     setFormData(prev => ({
       ...prev,
@@ -97,12 +120,10 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
     const pricePerLiter = parseFloat(formData.pricePerLiter.replace(',', '.'));
     const liters = Number((totalValue / pricePerLiter).toFixed(4));
 
-    // Update settings if price per liter changed
     if (pricePerLiter !== settings.fuelPricePerLiter) {
       onSettingsUpdate({ ...settings, fuelPricePerLiter: pricePerLiter });
     }
 
-    // Ensure expense categories include fuel categories
     const currentExpenseCategories = settings.expenseCategories || [];
     const fuelCategories = ['Abastecimento Trabalho', 'Abastecimento Pessoal'];
     const missingCategories = fuelCategories.filter(cat => !currentExpenseCategories.includes(cat));
@@ -129,6 +150,11 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
       pricePerLiter: pricePerLiter.toString(),
       type: 'work',
     });
+    
+    toast({
+      title: "Abastecimento adicionado!",
+      description: "Os dados foram salvos com sucesso.",
+    });
   };
 
   const handleChange = (field: string, value: string) => {
@@ -150,8 +176,8 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
           onClick={handleVoiceButtonClick}
           className={`flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
         >
-          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-          {isListening ? 'Ouvindo...' : 'Por Voz'}
+          <Mic size={16} />
+          {isListening ? 'Ouvindo...' : 'Preencher por Voz'}
         </Button>
       </CardHeader>
       <CardContent>
@@ -222,7 +248,7 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
             </p>
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" id="refuel-submit-btn" className="w-full">
             Adicionar Abastecimento
           </Button>
         </form>
