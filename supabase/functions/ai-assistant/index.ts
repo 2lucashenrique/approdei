@@ -158,8 +158,20 @@ Data Atual: ${new Date().toISOString()}
         tool_choice: "auto",
       }),
     });
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI Provider error:", errorText);
+        throw new Error(`AI Provider error: ${response.status} ${errorText}`);
+    }
 
     const aiResult = await response.json();
+    
+    if (!aiResult.choices || aiResult.choices.length === 0) {
+        console.error("No choices returned from AI:", JSON.stringify(aiResult));
+        throw new Error("Não foi possível obter uma resposta do assistente.");
+    }
+    
     const assistantMessage = aiResult.choices[0].message;
 
     if (assistantMessage.tool_calls) {
@@ -274,7 +286,20 @@ Data Atual: ${new Date().toISOString()}
         }),
       });
 
+      if (!finalResponse.ok) {
+          const errorText = await finalResponse.text();
+          console.error("AI Provider final error:", errorText);
+          throw new Error(`AI Provider final error: ${finalResponse.status}`);
+      }
+
       const finalAiResult = await finalResponse.json();
+      
+      if (!finalAiResult.choices || finalAiResult.choices.length === 0) {
+          return new Response(JSON.stringify({ text: toolResult }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+      }
+
       return new Response(JSON.stringify({ text: finalAiResult.choices[0].message.content }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
