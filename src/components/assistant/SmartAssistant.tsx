@@ -35,10 +35,11 @@ export const SmartAssistant = () => {
       setIsOpen(false);
     } catch (error: any) {
       console.error(error);
+      const errorMessage = error.message || "Não foi possível entender as informações.";
       toast({
         variant: "destructive",
-        title: "Erro ao processar",
-        description: "Não foi possível entender as informações. Tente ser mais claro.",
+        title: "Erro no Assistente",
+        description: errorMessage.includes("429") ? "Limite de requisições excedido. Tente novamente em alguns segundos." : errorMessage,
       });
     } finally {
       setIsLoading(false);

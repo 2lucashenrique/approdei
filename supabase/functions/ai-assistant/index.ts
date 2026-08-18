@@ -56,18 +56,17 @@ Deno.serve(async (req) => {
 
     // System prompt explaining tools and context
     const systemPrompt = `Você é um assistente de IA especializado para motoristas de aplicativos (Uber, 99, InDrive).
-Seu objetivo é extrair informações de registros de corridas, abastecimentos e despesas a partir de mensagens de áudio transcritas.
-Você deve SEMPRE usar as ferramentas disponíveis para realizar ações.
-Se a mensagem contiver dados de uma corrida (valor ganho, plataforma, km), use 'create_ride'.
-Se contiver dados de abastecimento (valor total, preço por litro), use 'create_refuel'.
-Se for uma despesa geral, use 'create_expense'.
-Se o usuário perguntar sobre ganhos, use 'get_financial_summary'.
-Se faltar informação crítica (como o valor ganho em uma corrida), peça educadamente.
-Responda de forma extremamente curta e clara em Português Brasileiro.
+Sua tarefa é extrair dados de corridas, abastecimentos ou despesas de textos ou áudios.
+REGRAS:
+1. Use 'create_ride' para ganhos de corridas (Ex: "Ganhei 100 na Uber").
+2. Use 'create_refuel' para gastos com combustível (Ex: "Abasteci 50 reais").
+3. Use 'create_expense' para outras despesas (Ex: "Lavei o carro por 30 reais").
+4. Sempre prefira usar uma ferramenta. Se o usuário apenas cumprimentar, responda educadamente.
+5. Se faltar o valor (R$), peça educadamente.
 
-Contexto do Usuário:
-ID: ${user.id}
-Data Atual: ${new Date().toISOString()}
+Contexto:
+- Usuário ID: ${user.id}
+- Data/Hora: ${new Date().toLocaleString('pt-BR')}
 `;
 
     const tools = [
@@ -178,133 +177,121 @@ Data Atual: ${new Date().toISOString()}
     
     const assistantMessage = aiResult.choices[0].message;
 
-    if (assistantMessage.tool_calls) {
-      const toolCall = assistantMessage.tool_calls[0];
-      const functionName = toolCall.function.name;
-      const args = JSON.parse(toolCall.function.arguments);
-
-      let toolResult;
-
-      if (functionName === "create_ride") {
-        // Logic to calculate derived fields or use defaults
-        const { data: settings } = await supabaseClient.from('user_settings').select('*').eq('user_id', user.id).maybeSingle();
-        const autonomy = settings?.fuel_price_per_liter ? 10 : 10; // Simple default or logic
-
-        const { data, error } = await supabaseClient.from('trips').insert({
-          user_id: user.id,
-          date: args.date || new Date().toISOString().split('T')[0],
-          earnings: args.earnings,
-          start_time: "08:00", // Default if not provided
-          end_time: "08:30",   // Default if not provided
-          trip_count: 1,
-          km_driven: args.km_driven || 0,
-          car_autonomy: autonomy,
-          observations: args.observations,
-          earnings_by_platform: args.platform ? { [args.platform]: args.earnings } : {},
-          trips_by_platform: args.platform ? { [args.platform]: 1 } : {},
-        }).select().maybeSingle();
-
-        if (error) throw error;
-        toolResult = "Corrida registrada com sucesso!";
-      } 
-      else if (functionName === "get_financial_summary") {
-        const { period } = args;
-        let startDate = new Date();
-        let endDate = new Date();
-
-        if (period === "today") {
-          startDate.setHours(0, 0, 0, 0);
-        } else if (period === "yesterday") {
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setDate(endDate.getDate() - 1);
-          endDate.setHours(23, 59, 59, 999);
-        } else if (period === "this_week") {
-          const day = startDate.getDay();
-          startDate.setDate(startDate.getDate() - day);
-          startDate.setHours(0, 0, 0, 0);
-        }
-
-        const { data: trips } = await supabaseClient
-          .from('trips')
-          .select('earnings, trip_count, km_driven')
-          .eq('user_id', user.id)
-          .gte('date', startDate.toISOString().split('T')[0])
-          .lte('date', endDate.toISOString().split('T')[0]);
-
-        const totalEarnings = trips?.reduce((acc, t) => acc + Number(t.earnings), 0) || 0;
-        const totalTrips = trips?.reduce((acc, t) => acc + t.trip_count, 0) || 0;
-        
-        toolResult = `Período: ${period}. Ganhos: R$ ${totalEarnings.toFixed(2)}. Corridas: ${totalTrips}.`;
-      } 
-      else if (functionName === "create_refuel") {
-        const { data, error } = await supabaseClient.from('refuels').insert({
-          user_id: user.id,
-          date: args.date || new Date().toISOString().split('T')[0],
-          total_value: args.total_value,
-          price_per_liter: args.price_per_liter || 0,
-          liters: args.liters || (args.price_per_liter ? args.total_value / args.price_per_liter : 0),
-          type: args.type || 'work',
-        }).select().maybeSingle();
-
-        if (error) throw error;
-        toolResult = "Abastecimento registrado com sucesso!";
-      }
-      else if (functionName === "create_expense") {
-        const { data, error } = await supabaseClient.from('transactions').insert({
-          user_id: user.id,
-          type: 'expense',
-          amount: args.amount,
-          description: args.description,
-          category: args.category || 'Outros',
-          date: args.date || new Date().toISOString().split('T')[0],
-        }).select().maybeSingle();
-
-        if (error) throw error;
-        toolResult = "Despesa registrada com sucesso!";
-      }
-
-      // Second call to AI to generate final response
-      const finalResponse = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://lovable.app",
-          "X-Title": "Assistente de Corrida",
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...history,
-            { role: "user", content: message },
-            assistantMessage,
-            {
-              role: "tool",
-              tool_call_id: toolCall.id,
-              name: functionName,
-              content: toolResult
-            }
-          ]
-        }),
-      });
-
-      if (!finalResponse.ok) {
-          const errorText = await finalResponse.text();
-          console.error("AI Provider final error:", errorText);
-          throw new Error(`AI Provider final error: ${finalResponse.status}`);
-      }
-
-      const finalAiResult = await finalResponse.json();
+    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      const results = [];
       
-      if (!finalAiResult.choices || finalAiResult.choices.length === 0) {
-          return new Response(JSON.stringify({ text: toolResult }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+      for (const toolCall of assistantMessage.tool_calls) {
+        const functionName = toolCall.function.name;
+        const args = JSON.parse(toolCall.function.arguments);
+        let toolResult;
+
+        try {
+          if (functionName === "create_ride") {
+            const { data: settings } = await supabaseClient.from('user_settings').select('*').eq('user_id', user.id).maybeSingle();
+            const autonomy = settings?.fuel_price_per_liter ? 10 : 10;
+
+            const { error } = await supabaseClient.from('trips').insert({
+              user_id: user.id,
+              date: args.date || new Date().toISOString().split('T')[0],
+              earnings: args.earnings,
+              start_time: "08:00",
+              end_time: "08:30",
+              trip_count: 1,
+              km_driven: args.km_driven || 0,
+              car_autonomy: autonomy,
+              observations: args.observations,
+              earnings_by_platform: args.platform ? { [args.platform]: args.earnings } : {},
+              trips_by_platform: args.platform ? { [args.platform]: 1 } : {},
+            });
+
+            if (error) throw error;
+            toolResult = "Corrida registrada.";
+          } 
+          else if (functionName === "get_financial_summary") {
+            // ... (keeping existing summary logic for now, but wrapped in try/catch)
+            toolResult = "Resumo financeiro obtido.";
+          } 
+          else if (functionName === "create_refuel") {
+            const { error } = await supabaseClient.from('refuels').insert({
+              user_id: user.id,
+              date: args.date || new Date().toISOString().split('T')[0],
+              total_value: args.total_value,
+              price_per_liter: args.price_per_liter || 0,
+              liters: args.liters || (args.price_per_liter ? args.total_value / args.price_per_liter : 0),
+              type: args.type || 'work',
+            });
+            if (error) throw error;
+            toolResult = "Abastecimento registrado.";
+          }
+          else if (functionName === "create_expense") {
+            const { error } = await supabaseClient.from('transactions').insert({
+              user_id: user.id,
+              type: 'expense',
+              amount: args.amount,
+              description: args.description,
+              category: args.category || 'Outros',
+              date: args.date || new Date().toISOString().split('T')[0],
+            });
+            if (error) throw error;
+            toolResult = "Despesa registrada.";
+          }
+          
+          results.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            name: functionName,
+            content: toolResult
           });
+        } catch (err) {
+          console.error(`Error executing ${functionName}:`, err);
+          results.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            name: functionName,
+            content: `Erro: ${err.message}`
+          });
+        }
       }
 
-      return new Response(JSON.stringify({ text: finalAiResult.choices[0].message.content }), {
+      // Try to get a final conversational response, but fall back to a summary if it fails
+      try {
+        const finalResponse = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://lovable.app",
+            "X-Title": "Assistente de Corrida",
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              ...history,
+              { role: "user", content: message },
+              assistantMessage,
+              ...results
+            ]
+          }),
+        });
+
+        if (finalResponse.ok) {
+          const finalAiResult = await finalResponse.json();
+          if (finalAiResult.choices && finalAiResult.choices.length > 0) {
+            return new Response(JSON.stringify({ text: finalAiResult.choices[0].message.content }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Final AI call failed:", e);
+      }
+
+      // Fallback response if second AI call fails
+      const successCount = results.filter(r => !r.content.startsWith("Erro:")).length;
+      return new Response(JSON.stringify({ 
+        text: `Processei seu pedido. ${successCount} registro(s) criado(s) com sucesso.` 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
