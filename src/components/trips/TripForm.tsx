@@ -51,10 +51,13 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
     // 5: carAutonomy
     // 6: Save Confirmation
 
-    const processStep = (text: string) => {
+    const processStep = (text: string, isFinal: boolean = true) => {
+      if (!isFinal) return; // Só processamos quando o navegador tiver certeza do que ouviu
+      
       console.log(`Voice step ${currentStep}, received: ${text}`);
       const lowerText = text.toLowerCase();
-      const numberMatch = text.match(/(\d+[,.]?\d*)/);
+      // Regex melhorado para capturar números mesmo com palavras em volta
+      const numberMatch = text.match(/(\d+([,.]\d+)?)/);
       const number = numberMatch ? numberMatch[1].replace(',', '.') : null;
 
       if (currentStep === 0) { // Start Time

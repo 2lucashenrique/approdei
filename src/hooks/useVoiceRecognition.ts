@@ -22,8 +22,8 @@ export const useVoiceRecognition = () => {
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
     recognition.lang = 'pt-BR';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    recognition.interimResults = true; // Habilitado para feedback visual e melhor captura
+    recognition.maxAlternatives = 3; // Aumentado para o navegador ter mais opções de acerto
     recognition.continuous = false; // Garante que pare após uma frase para melhor processamento step-by-step
 
     recognition.onstart = () => {
@@ -48,9 +48,17 @@ export const useVoiceRecognition = () => {
     };
 
     recognition.onresult = (event: any) => {
-      const result = event.results[0][0].transcript;
-      setTranscript(result);
-      onResult(result);
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      
+      if (finalTranscript) {
+        setTranscript(finalTranscript);
+        onResult(finalTranscript);
+      }
     };
 
     recognition.start();

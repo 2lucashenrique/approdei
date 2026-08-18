@@ -43,7 +43,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
     
     const processStep = (text: string) => {
       const lowerText = text.toLowerCase();
-      const numberMatch = text.match(/(\d+[,.]?\d*)/);
+      const numberMatch = text.match(/(\d+([,.]\d+)?)/);
       const number = numberMatch ? numberMatch[1].replace(',', '.') : null;
 
       if (currentStep === 0) { // Total Value
