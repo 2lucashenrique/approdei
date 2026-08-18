@@ -55,11 +55,15 @@ Deno.serve(async (req) => {
     }
 
     // System prompt explaining tools and context
-    const systemPrompt = `Você é um assistente de IA para motoristas de aplicativos (Uber, 99, etc).
-Seu objetivo é ajudar o motorista a registrar corridas, abastecimentos e despesas, e consultar informações financeiras.
-Você deve SEMPRE usar as ferramentas disponíveis para realizar ações ou consultas no banco de dados.
-Nunca invente valores. Se faltar informação obrigatória, pergunte.
-Responda de forma curta e clara em Português Brasileiro.
+    const systemPrompt = `Você é um assistente de IA especializado para motoristas de aplicativos (Uber, 99, InDrive).
+Seu objetivo é extrair informações de registros de corridas, abastecimentos e despesas a partir de mensagens de áudio transcritas.
+Você deve SEMPRE usar as ferramentas disponíveis para realizar ações.
+Se a mensagem contiver dados de uma corrida (valor ganho, plataforma, km), use 'create_ride'.
+Se contiver dados de abastecimento (valor total, preço por litro), use 'create_refuel'.
+Se for uma despesa geral, use 'create_expense'.
+Se o usuário perguntar sobre ganhos, use 'get_financial_summary'.
+Se faltar informação crítica (como o valor ganho em uma corrida), peça educadamente.
+Responda de forma extremamente curta e clara em Português Brasileiro.
 
 Contexto do Usuário:
 ID: ${user.id}
@@ -158,8 +162,20 @@ Data Atual: ${new Date().toISOString()}
         tool_choice: "auto",
       }),
     });
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI Provider error:", errorText);
+        throw new Error(`AI Provider error: ${response.status} ${errorText}`);
+    }
 
     const aiResult = await response.json();
+    
+    if (!aiResult.choices || aiResult.choices.length === 0) {
+        console.error("No choices returned from AI:", JSON.stringify(aiResult));
+        throw new Error("Não foi possível obter uma resposta do assistente.");
+    }
+    
     const assistantMessage = aiResult.choices[0].message;
 
     if (assistantMessage.tool_calls) {
@@ -274,7 +290,20 @@ Data Atual: ${new Date().toISOString()}
         }),
       });
 
+      if (!finalResponse.ok) {
+          const errorText = await finalResponse.text();
+          console.error("AI Provider final error:", errorText);
+          throw new Error(`AI Provider final error: ${finalResponse.status}`);
+      }
+
       const finalAiResult = await finalResponse.json();
+      
+      if (!finalAiResult.choices || finalAiResult.choices.length === 0) {
+          return new Response(JSON.stringify({ text: toolResult }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+      }
+
       return new Response(JSON.stringify({ text: finalAiResult.choices[0].message.content }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
