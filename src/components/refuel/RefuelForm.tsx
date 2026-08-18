@@ -79,9 +79,11 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
         }
       }
       else if (currentStep === 3) { // Save Confirmation
-        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode')) {
+        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode') || lowerText.includes('com certeza')) {
           speak("Salvando abastecimento.");
-          document.getElementById('refuel-submit-btn')?.click();
+          setTimeout(() => {
+            document.getElementById('refuel-submit-btn')?.click();
+          }, 1000);
         } else {
           speak("Entendido. Você pode revisar e salvar manualmente.");
         }
@@ -96,7 +98,7 @@ const RefuelForm: React.FC<RefuelFormProps> = ({ onSubmit, settings, onSettingsU
       else if (currentStep === 3) prompt = "Deseja salvar o abastecimento?";
 
       speak(prompt, () => {
-        startListening(processStep);
+        setTimeout(() => startListening(processStep), 300);
       });
     };
 

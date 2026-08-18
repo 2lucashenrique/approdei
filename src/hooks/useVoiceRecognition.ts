@@ -24,6 +24,7 @@ export const useVoiceRecognition = () => {
     recognition.lang = 'pt-BR';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+    recognition.continuous = false; // Garante que pare após uma frase para melhor processamento step-by-step
 
     recognition.onstart = () => {
       setIsListening(true);

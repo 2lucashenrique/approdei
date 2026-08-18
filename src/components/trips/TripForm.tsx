@@ -46,12 +46,13 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
     // Steps: 
     // 0: startTime
     // 1: endTime
-    // 2: Platform Loop (Ganhos -> Corridas)
-    // 3: kmDriven
-    // 4: carAutonomy
-    // 5: Save Confirmation
+    // 2: Platform Loop (Corridas -> Ganhos) - ORDEM CORRIGIDA
+    // 4: kmDriven
+    // 5: carAutonomy
+    // 6: Save Confirmation
 
     const processStep = (text: string) => {
+      console.log(`Voice step ${currentStep}, received: ${text}`);
       const lowerText = text.toLowerCase();
       const numberMatch = text.match(/(\d+[,.]?\d*)/);
       const number = numberMatch ? numberMatch[1].replace(',', '.') : null;
@@ -77,42 +78,42 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
         if (timeMatch) {
           const val = `${timeMatch[1].padStart(2, '0')}:${(timeMatch[2] || '00').padEnd(2, '0')}`;
           setFormData(prev => ({ ...prev, endTime: val }));
-          currentStep = 2;
+          currentStep = 2; // Move to trips first
           askQuestion();
         } else if (number) {
           setFormData(prev => ({ ...prev, endTime: `${number.padStart(2, '0')}:00` }));
-          currentStep = 2;
+          currentStep = 2; // Move to trips first
           askQuestion();
         } else {
           speak("Não entendi o horário. Pode repetir o horário de término?");
           setTimeout(() => startListening(processStep), 2000);
         }
       }
-      else if (currentStep === 2) { // Platform Earnings
-        if (number) {
-          const platform = platforms[platformIndex] || 'Geral';
-          setEarningsByPlatform(prev => ({ ...prev, [platform]: parseFloat(number) }));
-          currentStep = 3;
-          askQuestion();
-        } else {
-          speak("Não entendi o valor. Quanto você ganhou?");
-          setTimeout(() => startListening(processStep), 2000);
-        }
-      }
-      else if (currentStep === 3) { // Platform Trips
+      else if (currentStep === 2) { // Platform Trips (NOW FIRST)
         if (number) {
           const platform = platforms[platformIndex] || 'Geral';
           setTripsByPlatform(prev => ({ ...prev, [platform]: parseInt(number) }));
+          currentStep = 3; // Move to earnings next
+          askQuestion();
+        } else {
+          speak(`Não entendi a quantidade. Quantas corridas você fez na ${platforms[platformIndex] || 'plataforma'}?`);
+          setTimeout(() => startListening(processStep), 2000);
+        }
+      }
+      else if (currentStep === 3) { // Platform Earnings
+        if (number) {
+          const platform = platforms[platformIndex] || 'Geral';
+          setEarningsByPlatform(prev => ({ ...prev, [platform]: parseFloat(number) }));
           
           if (platformIndex < platforms.length - 1) {
             platformIndex++;
-            currentStep = 2; // Back to earnings for next platform
+            currentStep = 2; // Back to trips for next platform
           } else {
             currentStep = 4; // Next to KM
           }
           askQuestion();
         } else {
-          speak("Não entendi a quantidade. Quantas corridas você fez?");
+          speak(`Não entendi o valor. Quanto você ganhou na ${platforms[platformIndex] || 'plataforma'}?`);
           setTimeout(() => startListening(processStep), 2000);
         }
       }
@@ -137,10 +138,11 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
         }
       }
       else if (currentStep === 6) { // Save Confirmation
-        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode')) {
+        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode') || lowerText.includes('com certeza')) {
           speak("Salvando corrida.");
-          // We need to trigger submit manually or call it
-          document.getElementById('trip-submit-btn')?.click();
+          setTimeout(() => {
+            document.getElementById('trip-submit-btn')?.click();
+          }, 1000);
         } else {
           speak("Entendido. Você pode revisar os dados e salvar manualmente.");
         }
@@ -151,14 +153,15 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
       let prompt = "";
       if (currentStep === 0) prompt = "Qual o horário de início?";
       else if (currentStep === 1) prompt = "Qual o horário de término?";
-      else if (currentStep === 2) prompt = `Quanto você ganhou na ${platforms[platformIndex] || 'plataforma'}?`;
-      else if (currentStep === 3) prompt = `Quantas corridas você fez na ${platforms[platformIndex] || 'plataforma'}?`;
+      else if (currentStep === 2) prompt = `Quantas corridas você fez na ${platforms[platformIndex] || 'plataforma'}?`;
+      else if (currentStep === 3) prompt = `Quanto você ganhou na ${platforms[platformIndex] || 'plataforma'}?`;
       else if (currentStep === 4) prompt = "Quantos quilômetros foram rodados?";
       else if (currentStep === 5) prompt = "Qual a autonomia do carro?";
       else if (currentStep === 6) prompt = "Deseja salvar a corrida?";
 
       speak(prompt, () => {
-        startListening(processStep);
+        // Pequena pausa para garantir que o sistema não ouça a própria voz
+        setTimeout(() => startListening(processStep), 300);
       });
     };
 
