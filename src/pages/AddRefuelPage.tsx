@@ -11,7 +11,6 @@ import { Refuel, Settings } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
-import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 
 interface AddRefuelPageProps {
   settings: Settings;
@@ -27,7 +26,7 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isListening, startListening, speak } = useVoiceRecognition();
+  const [isListening] = useState(false);
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -37,74 +36,10 @@ const AddRefuelPage: React.FC<AddRefuelPageProps> = ({
   });
 
   const handleVoiceButtonClick = () => {
-    if (isListening) return;
-
-    let currentStep = 0;
-    
-    const processStep = (text: string) => {
-      const lowerText = text.toLowerCase();
-      const numberMatch = text.match(/(\d+([,.]\d+)?)/);
-      const number = numberMatch ? numberMatch[1].replace(',', '.') : null;
-
-      if (currentStep === 0) { // Total Value
-        if (number) {
-          setFormData(prev => ({ ...prev, totalValue: number }));
-          currentStep = 1;
-          askQuestion();
-        } else {
-          speak("Não entendi o valor. Qual o valor total abastecido?");
-          setTimeout(() => startListening(processStep), 2000);
-        }
-      } 
-      else if (currentStep === 1) { // Price per liter
-        if (number) {
-          setFormData(prev => ({ ...prev, pricePerLiter: number }));
-          currentStep = 2;
-          askQuestion();
-        } else {
-          speak("Não entendi o preço. Qual o valor por litro?");
-          setTimeout(() => startListening(processStep), 2000);
-        }
-      }
-      else if (currentStep === 2) { // Type
-        if (lowerText.includes('trabalho') || lowerText.includes('uber') || lowerText.includes('trampo')) {
-          setFormData(prev => ({ ...prev, type: 'work' }));
-          currentStep = 3;
-          askQuestion();
-        } else if (lowerText.includes('pessoal') || lowerText.includes('casa')) {
-          setFormData(prev => ({ ...prev, type: 'personal' }));
-          currentStep = 3;
-          askQuestion();
-        } else {
-          speak("Diga se é trabalho ou pessoal.");
-          setTimeout(() => startListening(processStep), 2000);
-        }
-      }
-      else if (currentStep === 3) { // Save Confirmation
-        if (lowerText.includes('sim') || lowerText.includes('salvar') || lowerText.includes('pode') || lowerText.includes('com certeza')) {
-          speak("Salvando abastecimento.");
-          setTimeout(() => {
-            document.getElementById('refuel-submit-btn-page')?.click();
-          }, 1000);
-        } else {
-          speak("Entendido. Você pode revisar e salvar manualmente.");
-        }
-      }
-    };
-
-    const askQuestion = () => {
-      let prompt = "";
-      if (currentStep === 0) prompt = "Qual o valor total abastecido?";
-      else if (currentStep === 1) prompt = "Qual o valor por litro?";
-      else if (currentStep === 2) prompt = "O abastecimento é para trabalho ou pessoal?";
-      else if (currentStep === 3) prompt = "Deseja salvar o abastecimento?";
-
-      speak(prompt, () => {
-        setTimeout(() => startListening(processStep), 300);
-      });
-    };
-
-    askQuestion();
+    toast({
+      title: "Assistente Inteligente",
+      description: "Use o botão mágico azul no canto inferior da tela para preencher por voz.",
+    });
   };
 
   React.useEffect(() => {

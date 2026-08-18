@@ -9,8 +9,7 @@ import { Trip, Settings } from '@/types';
 import { calculateFuelConsumed, calculateFuelCost, calculateNetProfit, calculateEarningsPerHour, calculateHoursWorked } from '@/utils/calculations';
 import PlatformTripSelector from './PlatformTripSelector';
 import { useAuth } from '@/hooks/useAuth';
-import { Mic, MicOff } from 'lucide-react';
-import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
+import { Mic } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface TripFormProps {
@@ -20,7 +19,7 @@ interface TripFormProps {
 
 const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   const { user } = useAuth();
-  const { isListening, startListening, speak } = useVoiceRecognition();
+  const [isListening] = useState(false);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     startTime: '',
@@ -37,7 +36,14 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
   stateRef.current = { formData, tripsByPlatform, earningsByPlatform };
 
   const handleVoiceButtonClick = () => {
-    if (isListening) return;
+    toast({
+      title: "Assistente Inteligente",
+      description: "Use o botão mágico azul no canto inferior da tela para preencher por voz.",
+    });
+  };
+
+  /* Removendo lógica antiga para evitar conflitos */
+  const _oldVoiceLogic = () => {
 
     let currentStep = 0;
     const platforms = settings.platforms || [];
@@ -168,7 +174,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, settings }) => {
       });
     };
 
-    askQuestion();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
