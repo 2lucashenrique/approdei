@@ -19,8 +19,8 @@ export default defineConfig(({ mode }) => ({
         name: 'Rodei - Gerenciador para Motoristas',
         short_name: 'Rodei',
         description: 'App para motoristas de aplicativo gerenciarem corridas, abastecimentos e lucros',
-        theme_color: '#0EA5E9',
-        background_color: '#ffffff',
+        theme_color: '#EAB308',
+        background_color: '#EAB308',
         display: 'standalone',
         icons: [
           {
